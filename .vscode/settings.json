@@ -12,6 +12,7 @@
         "utility": "cpp",
         "*.tcc": "cpp",
         "iostream": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "string_view": "cpp"
     }
 }

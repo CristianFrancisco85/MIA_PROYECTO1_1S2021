@@ -1,4 +1,4 @@
-/*------------------------------Código utilizado----------------------------------*/
+/*------------------------------Importacion de Codigo ----------------------------------*/
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +8,7 @@
 #include <scanner.h>
 #include <typeinfo>
 #include <MKDISK.h>
+#include <RMDISK.h>
 #include <structs.h>
 
 
@@ -21,12 +22,13 @@ extern FILE *yyin;
 
 
 MKDISK_* mkdisk_ = new MKDISK_();
+RMDISK_* rmdisk_ = new RMDISK_();
 void yyerror(const char *s);
 
 string lineaGuiones="------------------------------------------------------------------------------------------------------------------------------------------------------";
 
 %}
-/*---------------Declaración de tokens utilizados en el léxico--------------------*/
+/*---------------Tokens de Flex--------------------*/
 
 %start INICIO
 
@@ -59,7 +61,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> wf
 
 
-/*----------------------Declaración de producciones------------------------*/
+/*----------------------Producciones-----------------------*/
 
 %type<STRING> INICIO
 %type<STRING> INSTRUCCIONES
@@ -67,6 +69,7 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MKDISK
 %type<STRING> MKDISKPARAMS
 %type<STRING> MKDISKPARAM
+%type<STRING> RMDISK
 
 /*-------------------------------- Opciones --------------------------------------*/
 
@@ -77,7 +80,7 @@ char* STRING;
 char* NUM;
 }
 
-/*------------------ Declaración de la gramática -------------------------*/
+/*------------------ Gramatica-------------------------*/
 
 %%
 INICIO: INSTRUCCIONES;
@@ -89,11 +92,12 @@ INSTRUCCIONES:
 
 INSTRUCCION: 
     MKDISK
+    |RMDISK
     | error{}
 ;
 
 MKDISK:
-    mkdisk MKDISKPARAMS {mkdisk_->createDisk();std::cout << lineaGuiones << std::endl;;mkdisk_ = new MKDISK_();}
+    mkdisk MKDISKPARAMS {mkdisk_->createDisk();cout << lineaGuiones <<endl;;mkdisk_ = new MKDISK_();}
 ;
 
 MKDISKPARAMS: 
@@ -110,6 +114,11 @@ MKDISKPARAM:
     | guion u igual m {mkdisk_->setUnit($4);}
     | guion path igual ruta {mkdisk_->setPath($4);}
     | guion path igual cadena {mkdisk_->setPath($4);}
+;
+
+RMDISK: 
+    rmdisk guion path igual ruta {rmdisk_->setPath($5);rmdisk_->deleteDisk(); cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
+    | rmdisk guion path igual cadena {rmdisk_->setPath($5);rmdisk_->deleteDisk();cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
 ;
 
 

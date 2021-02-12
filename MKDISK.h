@@ -18,11 +18,11 @@ using namespace std;
 
 class MKDISK_{
 private:
-    int size;///Atributo size
-    char fit[2];/// Tipo de fit
-    string unit;/// Tipo de Unidades
-    char path[255];/// Path del disco
-    bool statusFlag;/// Indica si ha errores con el comando.
+    int size;//Atributo size
+    char fit[2];// Tipo de fit
+    string unit;// Tipo de Unidades
+    char path[255];// Path del disco
+    bool statusFlag;// Indica si ha errores con el comando.
     MBR masterBootRecord;// MasterBootRecord
 
 public:
@@ -128,19 +128,15 @@ void MKDISK_::setPath(char *value){
 
 void MKDISK_::setStatus(){
     this->statusFlag = false;
-    if(this->size > 0 && this->path[0] == '/')
-    {
-        if(string(this->path) != "/")
-        {
+    if(this->size > 0 && this->path[0] == '/'){
+        if(string(this->path) != "/"){
             this->statusFlag = true;
         }
-        else
-        {
+        else{
             cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
         }
     }
-    else
-    {
+    else{
         if(this->path[0] != '/'){
             cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
         }

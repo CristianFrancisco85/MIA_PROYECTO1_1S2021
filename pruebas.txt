@@ -1,4 +1,5 @@
 mkdisk -size=2000 -u=k -path=/home/cristian/PruebAsMIA/Disco1.dk
-mkdisk -size=10 -path=/home/cristian/PruebAsMIA/Disco2.dk
-mkdiSk -size=2000 -u=k -path="/home/cristian/PruebAs MIA/Disco3.dk"
-mkdisk -sIze=20 -u=m -path="/home/cristian/PruebAsMIA/Disco4.dk"
+mkdisk -size=2 -u=m -path=/home/cristian/PruebAsMIA/Disco2.dk
+mkdisk -size=10 -path=/home/cristian/PruebAsMIA/Disco3.dk
+mkdisk -size=1000 -u=k -path=/home/cristian/PruebAsMIA/Disco4.dk
+rmdisk -path=/home/cristian/PruebAsMIA/Disco3.dk
