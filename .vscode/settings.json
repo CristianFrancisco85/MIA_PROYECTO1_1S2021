@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "string": "cpp",
+        "optional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "*.tcc": "cpp",
+        "iostream": "cpp",
+        "typeinfo": "cpp"
+    }
+}
