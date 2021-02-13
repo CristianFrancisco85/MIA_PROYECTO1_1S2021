@@ -9,8 +9,9 @@
 #include <typeinfo>
 #include <MKDISK.h>
 #include <RMDISK.h>
+#include <MOUNT.h>
+#include <list>
 #include <structs.h>
-
 
 
 using namespace std;
@@ -19,10 +20,12 @@ extern int yylex(void);
 extern char *yytext;
 extern int SourceLine;
 extern FILE *yyin;
+list<MOUNT_>* mounted = new list<MOUNT_>();
 
 
 MKDISK_* mkdisk_ = new MKDISK_();
 RMDISK_* rmdisk_ = new RMDISK_();
+MOUNT_* mount_ = new MOUNT_();
 void yyerror(const char *s);
 
 string lineaGuiones="------------------------------------------------------------------------------------------------------------------------------------------------------";
@@ -66,10 +69,16 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> INICIO
 %type<STRING> INSTRUCCIONES
 %type<STRING> INSTRUCCION
+
 %type<STRING> MKDISK
 %type<STRING> MKDISKPARAMS
 %type<STRING> MKDISKPARAM
+
 %type<STRING> RMDISK
+
+%type<STRING> MOUNT
+%type<STRING> MOUNTPARAMS
+%type<STRING> MOUNTPARAM
 
 /*-------------------------------- Opciones --------------------------------------*/
 
@@ -93,6 +102,7 @@ INSTRUCCIONES:
 INSTRUCCION: 
     MKDISK
     |RMDISK
+    |MOUNT
     | error{}
 ;
 
@@ -119,6 +129,22 @@ MKDISKPARAM:
 RMDISK: 
     rmdisk guion path igual ruta {rmdisk_->setPath($5);rmdisk_->deleteDisk(); cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
     | rmdisk guion path igual cadena {rmdisk_->setPath($5);rmdisk_->deleteDisk();cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
+;
+ 
+MOUNT: 
+    mount MOUNTPARAMS {{mount_->beginToMount();cout<<lineaGuiones<<endl;mount_= new MOUNT_();}}
+;
+
+MOUNTPARAMS: 
+    MOUNTPARAM
+    | MOUNTPARAMS MOUNTPARAM
+;
+
+MOUNTPARAM:   
+    guion path igual ruta {mount_->setPath($4);}
+    | guion path igual cadena {mount_->setPath($4);}
+    | guion name igual id {mount_->setName($4);}
+    | guion name igual cadena {mount_->setName($4);}
 ;
 
 

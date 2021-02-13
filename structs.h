@@ -8,9 +8,9 @@
 #include <string>
 
 /**
- * Particiones primarias.
+ * Particiones Primarias.
+ * Part Status 0 existe, 1 no existe y 2 si esta montada
 */
-
 struct Partition{
 public:
     char part_status = '0';
@@ -22,6 +22,9 @@ public:
 };
 
 
+/**
+ * Master Boot Record
+*/
 struct MBR{
 public:
     int mbr_tamano;
@@ -29,4 +32,17 @@ public:
     int mbr_disk_signature;
     char disk_fit;
     Partition mbr_partitions[4];
+};
+
+
+/**
+ * Extended Boot Record
+*/
+struct EBR{
+    char part_status='0';
+    char part_fit='0';
+    int part_start=-1;
+    int part_size=0;
+    int part_next=-1;
+    char part_name[16];
 };

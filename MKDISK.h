@@ -32,8 +32,8 @@ public:
     */
     MKDISK_(){
         //Fit Predeterminado Mejor Ajuste
-        this->fit[0]='b';
-        this->fit[1]='f';
+        this->fit[0]='F';
+        this->fit[1]='F';
         //Unidades Predeterminadas MegaBytes
         this->unit="m";
 
@@ -76,7 +76,7 @@ public:
 
     /**
      * Getter del size
-     * @return Tamo del disco en bytes
+     * @return Tamo del disco en kilobytes
     */
     int getSize();
 
@@ -104,8 +104,8 @@ void MKDISK_::setSize(char *value){
 
 void MKDISK_::setFit(char *value){
     strcpy(this->fit, value);
-    this->fit[0] = tolower(fit[0]);
-    this->fit[1] = tolower(fit[1]);
+    this->fit[0] = toupper(fit[0]);
+    this->fit[1] = toupper(fit[1]);
 }
 
 void MKDISK_::setUnit(char *value){
@@ -113,15 +113,12 @@ void MKDISK_::setUnit(char *value){
 }
 
 void MKDISK_::setPath(char *value){
-    if(value[0]=='\"')
-    {
+    if(value[0]=='\"'){
         string aux = value;
         aux = aux.substr(1,aux.length()-2);
-        const char* auxCharArr = aux.c_str();
-        strcpy(this->path, auxCharArr);
+        strcpy(this->path, aux.c_str());
     }
-    else
-    {
+    else{
         strcpy(this->path, value);
     }
 }
@@ -189,6 +186,11 @@ int MKDISK_::createDisk(){
         if(f == NULL){
             return 0;
         }
+        //Se configura el Master Boot Record
+        configureMaster();
+        //Se graba MBR
+        fseek(f,0,SEEK_SET);
+        fwrite(&this->masterBootRecord, sizeof (MBR),1,f);
 
         //Se escribe disco
         int diskSize = getSize();
@@ -200,25 +202,21 @@ int MKDISK_::createDisk(){
             }
             fwrite(&bloqueDatos, sizeof(bloqueDatos), 1, f);
         }
-        //Se configura el Master Boot Record
-        configureMaster();
-        fseek(f,0,SEEK_SET);
-        //Se graba MBR
-        fwrite(&this->masterBootRecord, sizeof (MBR),1,f);
-        fseek(f,0,SEEK_SET);
+
         //Se lee MBR
+        fseek(f,0,SEEK_SET);
         fread(&masterBootRecord,sizeof (MBR),1,f);
         fflush(f);
         fclose(f);
 
         cout << "[OK] Disco creado exitosamente" << endl;
+        cout << masterBootRecord.mbr_tamano<<endl;
         return 1;
     }
     return 0;
 }
 
-void MKDISK_::configureMaster()
-{
+void MKDISK_::configureMaster(){
     //Tamaño
     masterBootRecord.mbr_tamano = this->getSize()*1024;
 

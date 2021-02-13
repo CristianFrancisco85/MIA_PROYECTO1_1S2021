@@ -16,6 +16,7 @@ extern int SourceLine;
 extern FILE *yyin;
 extern int yyparse(void);
 
+
 string toLowercase(string n){
     string auxString;
     if( n != ""){
