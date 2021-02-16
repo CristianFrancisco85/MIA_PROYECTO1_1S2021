@@ -31,7 +31,7 @@ public:
      * Constructor
     */
     MKDISK_(){
-        //Fit Predeterminado Mejor Ajuste
+        //Fit Predeterminado Primer Ajuste
         this->fit[0]='F';
         this->fit[1]='F';
         //Unidades Predeterminadas MegaBytes
@@ -125,7 +125,7 @@ void MKDISK_::setPath(char *value){
 
 void MKDISK_::setStatus(){
     this->statusFlag = false;
-    if(this->size > 0 && this->path[0] == '/'){
+    if(this->path[0] == '/' && this->size > 0){
         if(string(this->path) != "/"){
             this->statusFlag = true;
         }
@@ -158,14 +158,13 @@ int MKDISK_::getUnit(){
 int MKDISK_::createDisk(){
     setStatus();
     if(this->statusFlag){
-        string auxPath1 = this->path;
-        string auxPath2 = this->path;
+        string pathSinName = this->path;
+        string pathConName = this->path;
         char* ruta_aux = this->path;
 
-        const size_t ultimaRuta = auxPath1.find_last_of("/");
-        
-        if (string::npos != ultimaRuta){
-            auxPath1 = auxPath1.substr(0, ultimaRuta);
+        const size_t lastSlash = pathSinName.find_last_of("/");
+        if (string::npos != lastSlash){
+            pathSinName = pathSinName.substr(0, lastSlash);
         }
 
         //Si crea directorio si es necesario
@@ -182,7 +181,7 @@ int MKDISK_::createDisk(){
         
         //Se abre un stream de datos en el directorio
         FILE *f;
-        f = fopen(auxPath2.c_str(),"wb");
+        f = fopen(pathConName.c_str(),"wb");
         if(f == NULL){
             return 0;
         }
@@ -206,11 +205,10 @@ int MKDISK_::createDisk(){
         //Se lee MBR
         fseek(f,0,SEEK_SET);
         fread(&masterBootRecord,sizeof (MBR),1,f);
-        fflush(f);
         fclose(f);
 
         cout << "[OK] Disco creado exitosamente" << endl;
-        cout << masterBootRecord.mbr_tamano<<endl;
+        //cout << masterBootRecord.mbr_tamano<<endl;
         return 1;
     }
     return 0;
@@ -235,7 +233,6 @@ void MKDISK_::configureMaster(){
 }
 
 char MKDISK_::getFit(){
-    //if(tolower(fit[0]) != 'b' || tolower(fit[0]) != 'f' || tolower(fit[0]) != 'w'){return 'F';}
     return toupper(this->fit[0]);
 }
 

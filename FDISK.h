@@ -8,17 +8,16 @@
 #include<iostream>
 #include<stdio.h>
 #include<string.h>
-#include<MOUNT.h>
 #include<structs.h>
+#include<MOUNT.h>
 
 using namespace  std;
-extern list<MOUNT_> *mounted;
 
 class FDISK_{
 private:
 
     enum partitionTypes{P, E, L};
-    enum operationTypes{create_, delete_, modify_};
+    enum operationTypes{create_, delete_, add_};
 
     int size; //Tamaño de la particion
     string unit;// Tipo de Unidades
@@ -37,13 +36,15 @@ public:
  * Constructor
  */
 FDISK_(){
-    //Fit predeterminado Mejor Ajuste
+    //Fit predeterminado Peor Ajuste
     this->fit[0]='W';
     this->fit[1]='F';
-    //Unidades predeterminadas MegaBytes
+    //Unidades predeterminadas kilobytes
     this->unit='k';
     //Particion predeterminada
     this->partitionType=P;
+    //Operacion predetermianda
+    this->operationType = create_;
 };
 
 /**
@@ -102,6 +103,11 @@ void setCorrect(bool boolean);
 void setType(char *type);
 
 /**
+ * Verifica si los parametros son validos
+*/
+void setStatus();
+
+/**
  * Getter del tipo de fit
 */
 char getFit();
@@ -109,7 +115,7 @@ char getFit();
 /**
  * Multiplicador de las unidades
 */
-char getUnit();
+int getUnit();
 
 /**
  * Getter del size en Bytes
@@ -125,6 +131,16 @@ char getType();
  * Crea una particion segun el tipo
  */
 void createPartition();
+
+/**
+ * Agrega o quita espacion a una particion
+*/
+void addToPartition();
+
+/**
+ *Elimina una particion
+*/
+void deletePartition();
 
 /**
  * Crea una partición primaria.
@@ -146,7 +162,14 @@ void createLogicPartition();
 */
 bool partitionExist(char* name);
 
+/**
+ * Inicia la ejecucion del comando
+*/
+void init();
+
 };
+
+extern list<MOUNT_> *mounted;
 
 void FDISK_::setSize(char* size){
     this->size = stoi(size);
@@ -184,7 +207,7 @@ void FDISK_::setName(char *c){
 
 void FDISK_::setAdd(char* add){
     this->add = atoi(add);
-    this->operationType = modify_;
+    this->operationType = add_;
 }
 
 void FDISK_::setCorrect(bool boolean){
@@ -192,7 +215,7 @@ void FDISK_::setCorrect(bool boolean){
 }
 
 void FDISK_::setType(char *type){
-    switch (tolower(type[0])) {
+    switch (type[0]) {
     case 'p':
         this->partitionType = P;
         break;
@@ -205,11 +228,54 @@ void FDISK_::setType(char *type){
     }
 }
 
+void FDISK_::setStatus(){
+
+    this->statusFlag=false;
+
+    FILE *file = fopen(path, "rb+");
+    if(file == NULL){
+        cout<< "\u001B[31m" << "[BAD PARAM] No existe el discooooo"<< "\x1B[0m" << endl;
+        return;
+    }
+    fclose(file);
+
+    //Parametros obligatorios
+    if(this->path[0] != '/'){
+        cout<< "\u001B[31m" << "[BAD PARAM] Path no valido"<< "\x1B[0m" << endl;
+        return;
+
+    }
+    if(this->name == ""){
+        cout<< "\u001B[31m" << "[BAD PARAM] Name no valido"<< "\x1B[0m" << endl;
+        return;
+    }
+
+    //Dependiendo del tipo de operacion
+    if(this->operationType == create_){
+        if(size<=0){
+            cout<< "\u001B[31m" << "[BAD PARAM] Size no puede ser menor o igual a 0"<< "\x1B[0m" << endl;
+            return;
+        }
+    }
+    else if(this->operationType == delete_){
+        
+    }
+    else if(this->operationType == add_){
+        if(size==0){
+            cout<< "\u001B[31m" << "[BAD PARAM] Size no puede ser 0"<< "\x1B[0m" << endl;
+            return;
+        }
+    }
+
+    this->statusFlag=true;
+
+}
+
 char FDISK_::getFit(){
     return toupper(this->fit[0]);
 }
 
-char FDISK_::getUnit(){
+int FDISK_::getUnit(){
     if(this->unit=="m"){
         return 1024*1024;
     }
@@ -227,13 +293,10 @@ char FDISK_::getType(){
     switch (partitionType) {
     case P:
         return('P');
-        break;
     case E:
         return('E');
-        break;
     case L:
         return('L');
-        break;
     default:
         return('P');
     }
@@ -290,35 +353,8 @@ void FDISK_::createPrimaryPartition(){
                 //Se verfica que no exista la particion
                 if(!partitionExist(this->name)){
 
-                    //Si el fit es el primer ajuste
-                    if(master.disk_fit=='F'){
-                        //Se configura el struct de la particion
-                        master.mbr_partitions[partitionIndex].part_status = '0';
-                        master.mbr_partitions[partitionIndex].part_type = 'P';
-                        master.mbr_partitions[partitionIndex].part_size = getSize();
-                        master.mbr_partitions[partitionIndex].part_fit = getFit();
-                        strcpy(master.mbr_partitions[partitionIndex].part_name, this->name);
-                        if(partitionIndex ==0){
-                            master.mbr_partitions[partitionIndex].part_start = sizeof (MBR);
-                        }
-                        else{
-                            master.mbr_partitions[partitionIndex].part_start = master.mbr_partitions[partitionIndex-1].part_start + master.mbr_partitions[partitionIndex-1].part_size;
-                        }
-
-                        // Se reescribe el MBR
-                        fseek(file,0, SEEK_SET);
-                        fwrite(&master,sizeof (MBR),1,file);
-
-                        //Se escribe la particion
-                        char myByte = '1';
-                        fseek(file,master.mbr_partitions[partitionIndex].part_start,SEEK_SET);
-                        for(int i = 0; i < getSize(); i++){
-                            fwrite(&myByte,1,1,file);
-                        }
-                        cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
-                    }
                     //Si es el mejor ajuste
-                    else if(master.disk_fit == 'B'){
+                    if(master.disk_fit == 'B'){
                         //Se calcula la mejor posicion
                         int bestPartitionIndex = partitionIndex;
                         for(int i = 0; i < 4; i++){
@@ -355,7 +391,37 @@ void FDISK_::createPrimaryPartition(){
                         for(int i = 0; i < getSize(); i++){
                             fwrite(&myByte,1,1,file);
                         }
-                        cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                        cout<< "\u001B[32m" << "[OK] La particion primaria " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                    }
+                    //Si el fit es el primer ajuste
+                    else if(master.disk_fit=='F'){
+                        //Se configura el struct de la particion
+                        master.mbr_partitions[partitionIndex].part_status = '0';
+                        master.mbr_partitions[partitionIndex].part_type = 'P';
+                        master.mbr_partitions[partitionIndex].part_size = getSize();
+                        master.mbr_partitions[partitionIndex].part_fit = getFit();
+                        strcpy(master.mbr_partitions[partitionIndex].part_name, this->name);
+                        if(partitionIndex ==0){
+                            master.mbr_partitions[partitionIndex].part_start = sizeof (MBR);
+                        }
+                        else{
+                            master.mbr_partitions[partitionIndex].part_start = master.mbr_partitions[partitionIndex-1].part_start + master.mbr_partitions[partitionIndex-1].part_size;
+                        }
+
+                        // Se reescribe el MBR
+                        fseek(file,0, SEEK_SET);
+                        fwrite(&master,sizeof (MBR),1,file);
+
+                        //Se escribe la particion
+                        char myByte = '1';
+                        fseek(file,master.mbr_partitions[partitionIndex].part_start,SEEK_SET);
+                        for(int i = 0; i < getSize(); i++){
+                            fwrite(&myByte,1,1,file);
+                        }
+                        //Se lee MBR
+                        fseek(file,0,SEEK_SET);
+                        fread(&master,sizeof (MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] La particion primaria " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                     }
                     //Si es el peor ajuste
                     else if(master.disk_fit == 'W')
@@ -395,7 +461,7 @@ void FDISK_::createPrimaryPartition(){
                         for(int i = 0; i < getSize(); i++){
                             fwrite(&myByte,1,1,file);
                         }
-                        cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                        cout<< "\u001B[32m" << "[OK] La particion primaria " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                     }
                 }
                 else{
@@ -462,46 +528,8 @@ void FDISK_::createExtendedPartition(){
                 if(sizeBool){
                     //Se verfica que no exista la particion
                     if(!partitionExist(this->name)){
-                        //Si el fit es el primer ajuste
-                        if(master.disk_fit == 'F'){
-                            //Se configura el struct de la particion
-                            master.mbr_partitions[partitionIndex].part_status = '0';
-                            master.mbr_partitions[partitionIndex].part_type = 'E';
-                            master.mbr_partitions[partitionIndex].part_size = getSize();
-                            master.mbr_partitions[partitionIndex].part_fit = getFit();
-                            strcpy(master.mbr_partitions[partitionIndex].part_name, this->name);
-                            if(partitionIndex ==0){
-                                master.mbr_partitions[partitionIndex].part_start = sizeof (MBR);
-                            }
-                            else{
-                                master.mbr_partitions[partitionIndex].part_start = master.mbr_partitions[partitionIndex-1].part_start + master.mbr_partitions[partitionIndex-1].part_size;
-                            }
-
-                            // Se reescribe el MBR
-                            fseek(file,0, SEEK_SET);
-                            fwrite(&master,sizeof (MBR),1,file);
-
-                            //Se configura el EBR
-                            fseek(file, master.mbr_partitions[partitionIndex].part_start, SEEK_SET);
-                            EBR eBootRecord;
-
-                            eBootRecord.part_status = '0';
-                            eBootRecord.part_fit = getFit();
-                            eBootRecord.part_start = master.mbr_partitions[partitionIndex].part_start;
-                            eBootRecord.part_size = 0;
-                            eBootRecord.part_next = -1;
-                            strcpy(eBootRecord.part_name,this->name);
-                            
-                            //Se escribe el EBR
-                            fwrite(&eBootRecord, sizeof (EBR),1,file);
-                            char myByte = '1';//Para llenar byte a byte
-                            for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
-                                fwrite(&myByte,1,1,file);
-                            }
-                            cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
-                        }
                         //Si es el mejor ajuste
-                        else if(master.disk_fit == 'B'){
+                        if(master.disk_fit == 'B'){
 
                             int bestPartitionIndex = partitionIndex;
                             for(int i = 0; i < 4; i++){
@@ -548,8 +576,47 @@ void FDISK_::createExtendedPartition(){
                             for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
                                 fwrite(&myByte,1,1,file);
                             }
-                            cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                            cout<< "\u001B[32m" << "[OK] La particion extendida " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                         }
+                        //Si el fit es el primer ajuste
+                        else if(master.disk_fit == 'F'){
+                            //Se configura el struct de la particion
+                            master.mbr_partitions[partitionIndex].part_status = '0';
+                            master.mbr_partitions[partitionIndex].part_type = 'E';
+                            master.mbr_partitions[partitionIndex].part_size = getSize();
+                            master.mbr_partitions[partitionIndex].part_fit = getFit();
+                            strcpy(master.mbr_partitions[partitionIndex].part_name, this->name);
+                            if(partitionIndex ==0){
+                                master.mbr_partitions[partitionIndex].part_start = sizeof (MBR);
+                            }
+                            else{
+                                master.mbr_partitions[partitionIndex].part_start = master.mbr_partitions[partitionIndex-1].part_start + master.mbr_partitions[partitionIndex-1].part_size;
+                            }
+
+                            // Se reescribe el MBR
+                            fseek(file,0, SEEK_SET);
+                            fwrite(&master,sizeof (MBR),1,file);
+
+                            //Se configura el EBR
+                            fseek(file, master.mbr_partitions[partitionIndex].part_start, SEEK_SET);
+                            EBR eBootRecord;
+
+                            eBootRecord.part_status = '0';
+                            eBootRecord.part_fit = getFit();
+                            eBootRecord.part_start = master.mbr_partitions[partitionIndex].part_start;
+                            eBootRecord.part_size = 0;
+                            eBootRecord.part_next = -1;
+                            strcpy(eBootRecord.part_name,this->name);
+                            
+                            //Se escribe el EBR
+                            fwrite(&eBootRecord, sizeof (EBR),1,file);
+                            char myByte = '1';//Para llenar byte a byte
+                            for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
+                                fwrite(&myByte,1,1,file);
+                            }
+                            cout<< "\u001B[32m" << "[OK] La particion extendida " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                        }
+                        //Si es el peor ajuste
                         else if(master.disk_fit =='W'){
                             int  worstPartitionIndex= partitionIndex;
                             for(int i = 0; i < 4; i++){
@@ -597,7 +664,7 @@ void FDISK_::createExtendedPartition(){
                             for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
                                 fwrite(&myByte,1,1,file);
                             }
-                            cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                            cout<< "\u001B[32m" << "[OK] La particion extendida " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                         }
                     }
                     else{
@@ -676,7 +743,7 @@ void FDISK_::createLogicPartition(){
                         fwrite(&ebr,sizeof (EBR),1, file);
                         fseek(file,extendedPartitionInit,SEEK_SET);
                         fread(&ebr, sizeof (EBR),1, file);
-                        cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                        cout<< "\u001B[32m" << "[OK] La particion logica " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                     }
                     else{
                         cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente en la particion extendida "<< "\x1B[0m" << endl;
@@ -691,11 +758,11 @@ void FDISK_::createLogicPartition(){
                         ebr.part_start = ftell(file);
                         ebr.part_size = getSize();
                         ebr.part_next = -1;
-
+                        strcpy(ebr.part_name, this->name);
                         //Escribirla en memoria
                         fseek(file, extendedPartitionInit,SEEK_SET);
                         fwrite(&ebr,sizeof (EBR),1,file);
-                        cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
+                        cout<< "\u001B[32m" << "[OK] La particion logica " <<this->name<<" ha sido creada exitosamente"<< "\x1B[0m" << endl;
                     }
                     else{
                         cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente en la particion extendida "<< "\x1B[0m" << endl;
@@ -707,7 +774,7 @@ void FDISK_::createLogicPartition(){
             }
         }
         else{
-            cout<< "\u001B[31m" << "[BAD PARAM] Ya existe una particion llamada"<<this->name<<" en el disco"<< "\x1B[0m" << endl;
+            cout<< "\u001B[31m" << "[BAD PARAM] Ya existe una particion llamada "<<this->name<<" en el disco"<< "\x1B[0m" << endl;
         }
     }
     else{
@@ -737,18 +804,222 @@ bool FDISK_::partitionExist(char* name){
     if(ePartitionIndex != -1){
         //Se lee EBR
         fseek(file, master.mbr_partitions[ePartitionIndex].part_start, SEEK_SET);
-        EBR extended;
+        EBR ebr;
+        fread(&ebr, sizeof (EBR),1,file);
+
+        fseek(file, master.mbr_partitions[ePartitionIndex].part_start, SEEK_SET);
         //Se lee toda la particion extendida y sus EBR
-        while( ftell(file)<(master.mbr_partitions[ePartitionIndex].part_size + master.mbr_partitions[ePartitionIndex].part_start) && fread(&extended, sizeof (EBR),1,file) !=0){
-            if(extended.part_next == -1){
-                return  false;
-            }
-            if(extended.part_name == name){
+        while( ftell(file)<(master.mbr_partitions[ePartitionIndex].part_size + master.mbr_partitions[ePartitionIndex].part_start) && fread(&ebr, sizeof (EBR),1,file) !=0){
+
+            if(strcmp(this->name,ebr.part_name)==0){
                 return  true;
+            }
+            else if(ebr.part_next == -1){
+                return  false;
+            } 
+            else{
+                fseek(file,ebr.part_next,SEEK_SET);
             }
         }
     }
     return  false;
 }
 
-//860
+void FDISK_::addToPartition(){
+
+}
+
+void FDISK_::deletePartition(){
+
+    FILE *file;
+    if((file = fopen(this->path, "r+b"))){
+
+        //Se verifica que no este montada
+        bool mount = false;
+        list<MOUNT_>::iterator i;
+        for(i = mounted->begin();i != mounted->end();i++){           
+            if(i->getName() == this->name && i->getPath() == this->path){
+                mount  = true;
+            }
+        }
+        if(!mount){
+
+            //Se lee el MBR
+            MBR master;
+            fseek(file,0,SEEK_SET);
+            fread(&master,sizeof (MBR),1,file);
+            int index = -1;
+            long logicIndex = -1; //Apunta al EBR de la particion que se va eliminar
+            long auxEbrIndex=-1; //Apunta al anterior EBR del EBR de la particion que se va eliminar
+            bool isExtended = false;
+            string opcion = "";
+            char myChar = '\0';
+
+            //Se busca indice de la particion
+            for(int i = 0; i < 4; i++){
+                if(strcmp(this->name,master.mbr_partitions[i].part_name) == 0){
+                    index = i;
+                    if(master.mbr_partitions[i].part_type == 'E'){
+                        isExtended = true;
+                    } 
+                    break;
+                }
+                else if(master.mbr_partitions[i].part_type == 'E'){
+
+                    //Se lee Extended Boot Record
+                    EBR ebr;
+                    fseek(file, master.mbr_partitions[i].part_start,SEEK_SET);
+                    
+                    //se busca la particion logica
+                    while(
+                    fread(&ebr,sizeof(EBR),1,file)!=0 && 
+                    (ftell(file) < master.mbr_partitions[i].part_size + master.mbr_partitions[i].part_start)){
+
+                        if(strcmp(this->name,ebr.part_name) == 0){
+                            logicIndex = ftell(file) - sizeof(EBR);
+                            break;
+                        }
+                        //Si ya no hay una EBR que le siga
+                        if(ebr.part_next == -1){
+                            break;
+                        }
+                        //Se pasa al siguiente EBR
+                        else {
+                            auxEbrIndex = ftell(file) - sizeof(EBR);
+                            fseek(file,ebr.part_next,SEEK_SET);
+                        }
+                    }
+                } 
+            }
+
+            //Si se va eliminar una particion extendida o logica
+            if(index != -1){
+
+                if(!isExtended){
+                    if(this->deleteType=="full"){
+                        //Se sobre escribe el disco
+                        fseek(file,master.mbr_partitions[index].part_start,SEEK_SET);
+                        fwrite(&myChar,1,master.mbr_partitions[index].part_size,file);
+                        //Se configura y se vuelve a escribir el MBR
+                        Partition tempPartition;
+                        master.mbr_partitions[index] = tempPartition;
+                        master.mbr_partitions[index].part_status = '1';
+                        fseek(file,0,SEEK_SET);
+                        fwrite(&master,sizeof(MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] Particion primaria eliminada exitosamente"<< "\x1B[0m" << endl;                    
+                    }
+                    else if(this->deleteType=="fast"){
+                        //Se configura y se vuelve a escribir el MBR
+                        Partition tempPartition;
+                        master.mbr_partitions[index] = tempPartition;
+                        master.mbr_partitions[index].part_status = '1';
+                        fseek(file,0,SEEK_SET);
+                        fwrite(&master,sizeof(MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] Particion primaria eliminada exitosamente"<< "\x1B[0m" << endl;   
+                    }     
+                    else{
+                        cout<< "\u001B[32m" << "[OK] No se indico el tipo de eliminacion"<< "\x1B[0m" << endl; 
+                    }       
+                }
+                else{
+                    if(this->deleteType=="full"){
+                        //Se sobre escribe el disco
+                        fseek(file,master.mbr_partitions[index].part_start,SEEK_SET);
+                        fwrite(&myChar,1,master.mbr_partitions[index].part_size,file);
+                        //Se configura y se vuelve a escribir el MBR
+                        Partition tempPartition;
+                        master.mbr_partitions[index] = tempPartition;
+                        master.mbr_partitions[index].part_status = '1';
+                        fseek(file,0,SEEK_SET);
+                        fwrite(&master,sizeof(MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] Particion extendida eliminada exitosamente"<< "\x1B[0m" << endl;                    
+                    }
+                    else if(this->deleteType=="fast"){
+                        //Se configura y se vuelve a escribir el MBR
+                        Partition tempPartition;
+                        master.mbr_partitions[index] = tempPartition;
+                        master.mbr_partitions[index].part_status = '1';
+                        fseek(file,0,SEEK_SET);
+                        fwrite(&master,sizeof(MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] Particion extendida eliminada exitosamente"<< "\x1B[0m" << endl;   
+                    }
+                    else{
+                        cout<< "\u001B[32m" << "[OK] No se indico el tipo de eliminacion"<< "\x1B[0m" << endl; 
+                    }
+                }
+            }
+            else if(logicIndex != -1){
+                
+                EBR ebr;
+
+                //Se lee EBR
+                fseek(file,logicIndex,SEEK_SET);
+                fread(&ebr,sizeof(EBR),1,file);
+                int nextPart = ebr.part_next; //Guarda el indice de la proxima particion logica
+
+                //Se lee EBR anterior y se actualiza
+                fseek(file,auxEbrIndex,SEEK_SET);
+                fread(&ebr,sizeof(EBR),1,file);
+                ebr.part_next = nextPart;
+                fseek(file,auxEbrIndex,SEEK_SET);
+                fwrite(&ebr,sizeof(EBR),1,file);
+
+                //Se vuelve a leer EBR
+                fseek(file,logicIndex,SEEK_SET);
+                fread(&ebr,sizeof(EBR),1,file);
+
+
+                if(this->deleteType=="full"){
+                    //Se sobre escribe el disco
+                    fseek(file,logicIndex,SEEK_SET);
+                    fwrite(&myChar,1,sizeof(EBR)+ebr.part_size,file);
+                    cout<< "\u001B[32m" << "[OK] Particion logica eliminada exitosamente"<< "\x1B[0m" << endl;                    
+                }
+                else if(this->deleteType=="fast"){
+                    cout<< "\u001B[32m" << "[OK] Particion logica eliminada exitosamente"<< "\x1B[0m" << endl;   
+                }     
+                else{
+                    cout<< "\u001B[32m" << "[OK] No se indico el tipo de eliminacion"<< "\x1B[0m" << endl; 
+                }  
+                
+
+            }
+            else{
+                cout<< "\u001B[31m" << "[BAD PARAM] La particion no existe "<< "\x1B[0m" << endl;
+            }
+
+        }
+        else{
+            cout<< "\u001B[31m" << "[BAD PARAM] Se tiene que desmontar la particion antes de eliminarla "<< "\x1B[0m" << endl;
+        }
+        fclose(file);
+    }
+    else{
+        cout<< "\u001B[31m" << "[BAD PARAM] No existe disco en el path "<< "\x1B[0m" << endl;
+    }
+
+}
+
+
+void FDISK_::init(){
+
+    setStatus();
+
+    if(statusFlag){
+        switch (this->operationType) {
+        case delete_:
+            deletePartition();
+            break;
+        case add_:
+            addToPartition();
+            break;
+        case create_:
+            createPartition();
+            break;
+        default:
+            break;
+        }
+    }
+    
+
+}

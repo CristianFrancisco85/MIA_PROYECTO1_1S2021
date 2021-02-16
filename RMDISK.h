@@ -48,7 +48,7 @@ void RMDISK_::deleteDisk(){
         if((f=fopen(this->path.c_str(),"r"))){
             string command = "rm '" + string(this->path) + "'";
             system(command.c_str());
-            cout << "[OK] Disco elinado exitosamente" << endl;
+            cout << "[OK] Disco eliminado exitosamente" << endl;
         }
         else{
             cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;

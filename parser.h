@@ -45,33 +45,42 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    numero = 258,
-    numero_negativo = 259,
-    igual = 260,
-    mkdisk = 261,
-    rmdisk = 262,
-    fdisk = 263,
-    mount = 264,
-    unmount = 265,
-    mkfs = 266,
-    f = 267,
-    u = 268,
-    k = 269,
-    m = 270,
-    path = 271,
-    size = 272,
-    type = 273,
-    del = 274,
-    add = 275,
-    name = 276,
-    id = 277,
-    fs = 278,
-    cadena = 279,
-    ruta = 280,
-    guion = 281,
-    bf = 282,
-    ff = 283,
-    wf = 284
+    pause_ = 258,
+    numero = 259,
+    numero_negativo = 260,
+    igual = 261,
+    mkdisk = 262,
+    rmdisk = 263,
+    fdisk = 264,
+    mount = 265,
+    unmount = 266,
+    mkfs = 267,
+    f = 268,
+    u = 269,
+    k = 270,
+    m = 271,
+    path = 272,
+    size = 273,
+    type = 274,
+    del = 275,
+    add = 276,
+    name = 277,
+    id = 278,
+    id_ = 279,
+    fs = 280,
+    cadena = 281,
+    ruta = 282,
+    guion = 283,
+    bf = 284,
+    ff = 285,
+    wf = 286,
+    delete__ = 287,
+    add__ = 288,
+    fast = 289,
+    full = 290,
+    p = 291,
+    e = 292,
+    l = 293
   };
 #endif
 
@@ -80,12 +89,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 87 "sintactico.y" /* yacc.c:1909  */
+#line 104 "sintactico.y" /* yacc.c:1909  */
 
 char* STRING;
 char* NUM;
 
-#line 89 "parser.h" /* yacc.c:1909  */
+#line 98 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

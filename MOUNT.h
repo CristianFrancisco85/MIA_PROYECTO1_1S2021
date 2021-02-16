@@ -37,11 +37,11 @@ public:
      * Setter del Path
      * @param c: path del disco para montar
     */
-    void setPath(char* c){
-        path = c;
-        if(path[0]=='\"'){
+    void setPath(char *value){
+        path = value;
+        if(path[0] == '\"'){
             path = path.substr(1, path.size()-2);
-        }
+        }   
     }
 
     /**
@@ -52,7 +52,7 @@ public:
         name = c;
         if(name[0] == '\"'){
             name = name.substr(1, name.size()-2);
-        }
+        }     
     }
 
     /**
@@ -151,32 +151,36 @@ void MOUNT_::setStatus(){
 }
 
 char MOUNT_::getLetter(){
-    char a = 'a';
-    if(mounted->size()== 0){
+
+    if(mounted->size() == 0){
         setLetter('a');
         return 'a';
     }
-    list<MOUNT_>::iterator i;
-    list<string> *marcadas = new list<string>();
-    for(i=mounted->begin(); i!=mounted->end(); i++){
+    else{
+        char auxChar = 'a';
+        list<MOUNT_>::iterator i;
+        list<string> *marcadas = new list<string>();
+        for(i=mounted->begin(); i!=mounted->end(); i++){
 
-        list<string>::iterator findIter;
-        findIter = find(marcadas->begin(), marcadas->end(),i->path);
+            list<string>::iterator findIter;
+            findIter = find(marcadas->begin(), marcadas->end(),i->path);
 
-        if(i->path != this->path && findIter == marcadas->end()){
-            marcadas->push_back(i->path);
-            a++;
+            if(findIter == marcadas->end() && i->path != this->path){
+                marcadas->push_back(i->path);
+                auxChar++;
+            }
+            if(i->path == this->path){
+                setLetter(i->letter);
+                return  i->letter;
+            }
         }
-        if(i->path == this->path){
-            setLetter(i->letter);
-            return  i->letter;
-        }
+        setLetter(auxChar);
+        return auxChar;
     }
-    setLetter(a);
-    return a;
 }
 
 int MOUNT_::getNumber(){
+    //AQUI HAY UN BUG
     int a = 1;
     list<MOUNT_>::iterator i;
     i=i++;
@@ -195,7 +199,8 @@ string MOUNT_::getId(){
 }
 
 string MOUNT_::createId(){
-    return "97"+ to_string(this->getNumber())+getLetter();
+    string aux(1,getLetter());
+    return "97"+to_string(this->getNumber())+aux;
 }
 
 bool MOUNT_::isMounted(){
@@ -327,7 +332,7 @@ void MOUNT_::mountPartition(){
         }
         else{
             mounted->push_back(*this);
-            cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido montada"<< "\x1B[0m" << endl;
+            cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido montada con ID: "<<this->id<< "\x1B[0m" << endl;
         }
 
     }

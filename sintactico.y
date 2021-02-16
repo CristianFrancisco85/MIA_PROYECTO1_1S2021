@@ -9,6 +9,7 @@
 #include <typeinfo>
 #include <MKDISK.h>
 #include <RMDISK.h>
+#include <FDISK.h>
 #include <MOUNT.h>
 #include <list>
 #include <structs.h>
@@ -25,6 +26,7 @@ list<MOUNT_>* mounted = new list<MOUNT_>();
 
 MKDISK_* mkdisk_ = new MKDISK_();
 RMDISK_* rmdisk_ = new RMDISK_();
+FDISK_* fdisk_ = new FDISK_();
 MOUNT_* mount_ = new MOUNT_();
 void yyerror(const char *s);
 
@@ -35,6 +37,7 @@ string lineaGuiones="-----------------------------------------------------------
 
 %start INICIO
 
+%token<NUM> pause_
 %token<NUM> numero
 %token<NUM> numero_negativo
 %token<STRING> igual
@@ -55,6 +58,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> add
 %token<STRING> name
 %token<STRING> id
+%token<STRING> id_
 %token<STRING> fs
 %token<STRING> cadena
 %token<STRING> ruta
@@ -62,6 +66,13 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> bf
 %token<STRING> ff
 %token<STRING> wf
+%token<STRING> delete__
+%token<STRING> add__
+%token<STRING> fast
+%token<STRING> full
+%token<STRING> p
+%token<STRING> e
+%token<STRING> l
 
 
 /*----------------------Producciones-----------------------*/
@@ -70,11 +81,17 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> INSTRUCCIONES
 %type<STRING> INSTRUCCION
 
+%type<STRING> PAUSE
+
 %type<STRING> MKDISK
 %type<STRING> MKDISKPARAMS
 %type<STRING> MKDISKPARAM
 
 %type<STRING> RMDISK
+
+%type<STRING> FDISK
+%type<STRING> FDISKPARAMS
+%type<STRING> FDISKPARAM
 
 %type<STRING> MOUNT
 %type<STRING> MOUNTPARAMS
@@ -102,8 +119,10 @@ INSTRUCCIONES:
 INSTRUCCION: 
     MKDISK
     |RMDISK
+    |FDISK
     |MOUNT
-    | error{}
+    |PAUSE
+    |error{}
 ;
 
 MKDISK:
@@ -130,9 +149,38 @@ RMDISK:
     rmdisk guion path igual ruta {rmdisk_->setPath($5);rmdisk_->deleteDisk(); cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
     | rmdisk guion path igual cadena {rmdisk_->setPath($5);rmdisk_->deleteDisk();cout << lineaGuiones <<endl; rmdisk_ = new RMDISK_();}
 ;
+
+FDISK: 
+    fdisk FDISKPARAMS{fdisk_->init(); cout<<lineaGuiones <<endl; fdisk_ = new FDISK_();}
+;
+
+FDISKPARAMS: 
+    FDISKPARAM
+    | FDISKPARAMS FDISKPARAM
+;
+
+FDISKPARAM:   
+    guion size igual numero {fdisk_->setSize($4);}
+    | guion u igual k {fdisk_->setUnit($4);}
+    | guion u igual m {fdisk_->setUnit($4);}
+    | guion path igual ruta {fdisk_->setPath($4);}
+    | guion path igual cadena {fdisk_->setPath($4);}
+    | guion name igual id {fdisk_->setName($4);}
+    | guion name igual cadena {fdisk_->setName($4);}
+    | guion f igual bf {fdisk_->setFit($4);}
+    | guion f igual ff {fdisk_->setFit($4);}
+    | guion f igual wf {fdisk_->setFit($4);}
+    | guion delete__ igual fast {fdisk_->setDelete($4);}
+    | guion delete__ igual full {fdisk_->setDelete($4);}
+    | guion add__ igual numero {fdisk_->setAdd($4);}
+    | guion add__ igual numero_negativo {fdisk_->setAdd($4);}
+    | guion type igual p {fdisk_->setType($4);}
+    | guion type igual e {fdisk_->setType($4);}
+    | guion type igual l {fdisk_->setType($4);}
+;
  
 MOUNT: 
-    mount MOUNTPARAMS {{mount_->beginToMount();cout<<lineaGuiones<<endl;mount_= new MOUNT_();}}
+    mount MOUNTPARAMS {mount_->beginToMount();cout<<lineaGuiones<<endl;mount_= new MOUNT_();}
 ;
 
 MOUNTPARAMS: 
@@ -147,6 +195,9 @@ MOUNTPARAM:
     | guion name igual cadena {mount_->setName($4);}
 ;
 
+PAUSE:
+    pause_{string aux; std::cout<<"Presiona Enter para continuar..."<<std::endl;std::cin>>aux;}
+;
 
 %%
 
