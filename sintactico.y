@@ -11,6 +11,7 @@
 #include <RMDISK.h>
 #include <FDISK.h>
 #include <MOUNT.h>
+#include <UNMOUNT.h>
 #include <list>
 #include <structs.h>
 
@@ -24,10 +25,13 @@ extern FILE *yyin;
 list<MOUNT_>* mounted = new list<MOUNT_>();
 
 
+
 MKDISK_* mkdisk_ = new MKDISK_();
 RMDISK_* rmdisk_ = new RMDISK_();
 FDISK_* fdisk_ = new FDISK_();
 MOUNT_* mount_ = new MOUNT_();
+UNMOUNT_* unmount_ = new UNMOUNT_();
+
 void yyerror(const char *s);
 
 string lineaGuiones="------------------------------------------------------------------------------------------------------------------------------------------------------";
@@ -97,6 +101,8 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MOUNTPARAMS
 %type<STRING> MOUNTPARAM
 
+%type<STRING> UNMOUNT
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -121,6 +127,7 @@ INSTRUCCION:
     |RMDISK
     |FDISK
     |MOUNT
+    |UNMOUNT
     |PAUSE
     |error{}
 ;
@@ -195,14 +202,17 @@ MOUNTPARAM:
     | guion name igual cadena {mount_->setName($4);}
 ;
 
+UNMOUNT: 
+    unmount guion id_ igual id {unmount_->setId($5);unmount_->beginToUnmount();cout << lineaGuiones <<endl;unmount_= new UNMOUNT_();}
+;
+
 PAUSE:
-    pause_{string aux; std::cout<<"Presiona Enter para continuar..."<<std::endl;std::cin>>aux;}
+    pause_{cout<<"Presiona Enter para continuar..."<<endl;cin.ignore();}
 ;
 
 %%
 
-void yyerror(const char *s)
-{
+void yyerror(const char *s){
     printf("Error sintactico en la linea %i: %s\n", SourceLine, s);
-    std::cout << lineaGuiones << std::endl;
+    cout << lineaGuiones <<endl;
 }

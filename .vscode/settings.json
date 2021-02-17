@@ -44,6 +44,7 @@
         "new": "cpp",
         "sstream": "cpp",
         "stdexcept": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "thread": "cpp"
     }
 }

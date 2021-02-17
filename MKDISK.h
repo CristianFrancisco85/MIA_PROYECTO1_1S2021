@@ -36,7 +36,6 @@ public:
         this->fit[1]='F';
         //Unidades Predeterminadas MegaBytes
         this->unit="m";
-
     };
 
     /**
@@ -91,11 +90,6 @@ public:
     */
     int createDisk();
     
-    /**
-     * Crea y configura el Master Boot Record
-    */
-    void configureMaster();
-
 };
 
 void MKDISK_::setSize(char *value){
@@ -155,12 +149,15 @@ int MKDISK_::getUnit(){
     return 1;
 }
 
+char MKDISK_::getFit(){
+    return toupper(this->fit[0]);
+}
+
 int MKDISK_::createDisk(){
     setStatus();
     if(this->statusFlag){
         string pathSinName = this->path;
         string pathConName = this->path;
-        char* ruta_aux = this->path;
 
         const size_t lastSlash = pathSinName.find_last_of("/");
         if (string::npos != lastSlash){
@@ -175,7 +172,7 @@ int MKDISK_::createDisk(){
 
         //Se otorga permiso
         comando = "sudo chmod -R 777 \'";
-        comando+= dirname(ruta_aux);
+        comando+= dirname(path);
         comando += '\'';
         system(comando.c_str());
         
@@ -185,8 +182,18 @@ int MKDISK_::createDisk(){
         if(f == NULL){
             return 0;
         }
+        
         //Se configura el Master Boot Record
-        configureMaster();
+        masterBootRecord.mbr_tamano = this->getSize()*1024;
+        time_t now = time(0);
+        masterBootRecord.mbr_fecha_creacion = now;
+        /// Firma del disco
+        srand(time(NULL));
+        int num = rand();
+        num=1+rand()%(100000-1);
+        masterBootRecord.mbr_disk_signature = num;
+        masterBootRecord.disk_fit = getFit();
+
         //Se graba MBR
         fseek(f,0,SEEK_SET);
         fwrite(&this->masterBootRecord, sizeof (MBR),1,f);
@@ -207,32 +214,8 @@ int MKDISK_::createDisk(){
         fread(&masterBootRecord,sizeof (MBR),1,f);
         fclose(f);
 
-        cout << "[OK] Disco creado exitosamente" << endl;
-        //cout << masterBootRecord.mbr_tamano<<endl;
+        cout<< "\u001B[32m" << "[OK] Disco creado exitosamente"<< "\x1B[0m" << endl;
         return 1;
     }
     return 0;
 }
-
-void MKDISK_::configureMaster(){
-    //Tamaño
-    masterBootRecord.mbr_tamano = this->getSize()*1024;
-
-    ///Fecha y hora
-    time_t now = time(0);
-    masterBootRecord.mbr_fecha_creacion = now;
-
-    /// Firma del disco
-    srand(time(NULL));
-    int num = rand();
-    num=1+rand()%(100000-1);
-    masterBootRecord.mbr_disk_signature = num;
-
-    /// Guardando tipo de fit
-    masterBootRecord.disk_fit = getFit();
-}
-
-char MKDISK_::getFit(){
-    return toupper(this->fit[0]);
-}
-

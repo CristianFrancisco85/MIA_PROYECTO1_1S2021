@@ -19,7 +19,7 @@ numero [0-9]+
 numero_negativo [-][0-9]+
 string (\"(\\.|[^\\"])*\")
 ruta "/"("/"|"-"|"_"|"."|[a-zA-Z0-9])+
-id ([a-zA-Z])([a-zA-Z]|[0-9]|"_")*
+id ([a-zA-Z]|[0-9]|"_")*
 
 %% // <<<<<<<<<<<<<<<<<<< [Reglas lexicas] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><
 ('\s'|'\r'|'\t')+ {};
@@ -50,7 +50,7 @@ id ([a-zA-Z])([a-zA-Z]|[0-9]|"_")*
 "l" {yylval.STRING = strdup(yytext);return (l);};
 "add" {yylval.STRING = strdup(yytext);return (add__);};
 "name" {yylval.STRING = strdup(yytext);return (name);};
-"id_" {yylval.STRING = strdup(yytext);return (id_);};
+"id" {yylval.STRING = strdup(yytext);return (id_);};
 "fs" {yylval.STRING = strdup(yytext);return (fs);};
 "bf" {yylval.STRING = strdup(yytext);return (bf);};
 "ff" {yylval.STRING = strdup(yytext);return (ff);};

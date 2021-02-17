@@ -76,7 +76,7 @@ void parse(){
             inputCommand+='\n';
             YY_BUFFER_STATE bufferState = yy_scan_string(inputCommand.c_str());
             if(yyparse()==0){
-                cout<< "\u001B[32m"<< "---Ejecucion de Comando Terminada---"<< "\x1B[0m"<<endl;
+                //cout<< "\u001B[32m"<< "---Ejecucion de Comando Terminada---"<< "\x1B[0m"<<endl;
             }
             else{
                 cout<<"\u001B[31m"<< "---Errores sintacticos en el comando---"<<endl;

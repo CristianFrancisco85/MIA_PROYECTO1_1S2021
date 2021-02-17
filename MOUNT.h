@@ -37,23 +37,13 @@ public:
      * Setter del Path
      * @param c: path del disco para montar
     */
-    void setPath(char *value){
-        path = value;
-        if(path[0] == '\"'){
-            path = path.substr(1, path.size()-2);
-        }   
-    }
+    void setPath(char *value);
 
     /**
      * Setter del Name
      * @param c: Nombre de la particion
     */
-    void setName(char *c){
-        name = c;
-        if(name[0] == '\"'){
-            name = name.substr(1, name.size()-2);
-        }     
-    }
+    void setName(char *c);
 
     /**
      * Setter del ID
@@ -133,6 +123,20 @@ void MOUNT_::setId(){
     this->id = this->createId();
 }
 
+void MOUNT_::setPath(char *value){
+    path = value;
+    if(path[0] == '\"'){
+        path = path.substr(1, path.size()-2);
+    }   
+}
+
+void MOUNT_::setName(char *c){
+    name = c;
+    if(name[0] == '\"'){
+        name = name.substr(1, name.size()-2);
+    }     
+}
+
 void MOUNT_::setLetter(char c){
     this->letter = c;
 }
@@ -152,46 +156,43 @@ void MOUNT_::setStatus(){
 
 char MOUNT_::getLetter(){
 
+    char auxChar = 'a';
+    list<MOUNT_>::iterator i;
+    for(i = mounted->begin(); i!=mounted->end(); i++ ){
+        //Si son del mismo disco
+        if(i->path == this->path){
+            auxChar++;
+        }
+    }
+    this->letter = auxChar;
+    return auxChar;
+}
+
+int MOUNT_::getNumber(){
     if(mounted->size() == 0){
-        setLetter('a');
-        return 'a';
+        this->number=1;
+        return 1;
     }
     else{
-        char auxChar = 'a';
+        int auxInt = 1;
         list<MOUNT_>::iterator i;
         list<string> *marcadas = new list<string>();
         for(i=mounted->begin(); i!=mounted->end(); i++){
-
             list<string>::iterator findIter;
             findIter = find(marcadas->begin(), marcadas->end(),i->path);
 
             if(findIter == marcadas->end() && i->path != this->path){
                 marcadas->push_back(i->path);
-                auxChar++;
+                auxInt++;
             }
             if(i->path == this->path){
-                setLetter(i->letter);
-                return  i->letter;
+                this->number=auxInt;
+                return auxInt;
             }
         }
-        setLetter(auxChar);
-        return auxChar;
+        this->number=auxInt;
+        return auxInt;
     }
-}
-
-int MOUNT_::getNumber(){
-    //AQUI HAY UN BUG
-    int a = 1;
-    list<MOUNT_>::iterator i;
-    i=i++;
-    for(i = mounted->begin(); i!=mounted->end(); i++ ){
-        //Si son del mismo disco
-        if(i->path == this->path){
-            a++;
-        }
-    }
-    this->number = a;
-    return a;
 }
 
 string MOUNT_::getId(){
@@ -334,7 +335,7 @@ void MOUNT_::mountPartition(){
             mounted->push_back(*this);
             cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido montada con ID: "<<this->id<< "\x1B[0m" << endl;
         }
-
+        return;
     }
 
     //Si es particion logica
@@ -352,15 +353,13 @@ void MOUNT_::mountPartition(){
         fclose(file);
 
         if(isMounted()){
-        cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
-        
+            cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
         }
         else{
             mounted->push_back(*this);
             cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido montada"<< "\x1B[0m" << endl;
         }
-
-
+        return;
     }
 
 

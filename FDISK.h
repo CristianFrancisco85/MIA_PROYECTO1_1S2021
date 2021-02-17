@@ -16,8 +16,8 @@ using namespace  std;
 class FDISK_{
 private:
 
-    enum partitionTypes{P, E, L};
-    enum operationTypes{create_, delete_, add_};
+    enum partitionTypes{Primary, Extended, Logic};
+    enum operationTypes{createOp, deleteOp, addOp};
 
     int size; //Tamaño de la particion
     string unit;// Tipo de Unidades
@@ -42,9 +42,9 @@ FDISK_(){
     //Unidades predeterminadas kilobytes
     this->unit='k';
     //Particion predeterminada
-    this->partitionType=P;
+    this->partitionType=Primary;
     //Operacion predetermianda
-    this->operationType = create_;
+    this->operationType = createOp;
 };
 
 /**
@@ -183,7 +183,7 @@ void FDISK_::setPath(char *value){
     if(value[0]=='\"'){
         string aux = value;
         aux = aux.substr(1,aux.length()-2);
-        strcpy(this->path, aux.c_str());
+        strcpy(this->path,aux.c_str());
     }
     else{
         strcpy(this->path, value);
@@ -198,7 +198,7 @@ void FDISK_::setFit(char *value){
 
 void FDISK_::setDelete(char* value){
     this->deleteType = value;
-    this->operationType = delete_;
+    this->operationType = deleteOp;
 }
 
 void FDISK_::setName(char *c){
@@ -207,7 +207,7 @@ void FDISK_::setName(char *c){
 
 void FDISK_::setAdd(char* add){
     this->add = atoi(add);
-    this->operationType = add_;
+    this->operationType = addOp;
 }
 
 void FDISK_::setCorrect(bool boolean){
@@ -217,13 +217,13 @@ void FDISK_::setCorrect(bool boolean){
 void FDISK_::setType(char *type){
     switch (type[0]) {
     case 'p':
-        this->partitionType = P;
+        this->partitionType = Primary;
         break;
     case 'e':
-        this->partitionType = E;
+        this->partitionType = Extended;
         break;
     case 'l':
-        this->partitionType = L;
+        this->partitionType = Logic;
         break;
     }
 }
@@ -251,16 +251,16 @@ void FDISK_::setStatus(){
     }
 
     //Dependiendo del tipo de operacion
-    if(this->operationType == create_){
+    if(this->operationType == createOp){
         if(size<=0){
             cout<< "\u001B[31m" << "[BAD PARAM] Size no puede ser menor o igual a 0"<< "\x1B[0m" << endl;
             return;
         }
     }
-    else if(this->operationType == delete_){
+    else if(this->operationType == deleteOp){
         
     }
-    else if(this->operationType == add_){
+    else if(this->operationType == addOp){
         if(size==0){
             cout<< "\u001B[31m" << "[BAD PARAM] Size no puede ser 0"<< "\x1B[0m" << endl;
             return;
@@ -291,11 +291,11 @@ int FDISK_::getSize(){
 
 char FDISK_::getType(){
     switch (partitionType) {
-    case P:
+    case Primary:
         return('P');
-    case E:
+    case Extended:
         return('E');
-    case L:
+    case Logic:
         return('L');
     default:
         return('P');
@@ -304,13 +304,13 @@ char FDISK_::getType(){
 
 void FDISK_::createPartition(){
     switch (partitionType) {
-    case P:
+    case Primary:
         createPrimaryPartition();
         break;
-    case E:
+    case Extended:
         createExtendedPartition();
         break;
-    case L:
+    case Logic:
         createLogicPartition();
         break;
     default:
@@ -826,7 +826,7 @@ bool FDISK_::partitionExist(char* name){
 }
 
 void FDISK_::addToPartition(){
-
+    //SE COMPRUEBA EL ESPACIO USADO EN EL DISCO?
 }
 
 void FDISK_::deletePartition(){
@@ -1007,13 +1007,13 @@ void FDISK_::init(){
 
     if(statusFlag){
         switch (this->operationType) {
-        case delete_:
+        case deleteOp:
             deletePartition();
             break;
-        case add_:
+        case addOp:
             addToPartition();
             break;
-        case create_:
+        case createOp:
             createPartition();
             break;
         default:
