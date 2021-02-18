@@ -12,6 +12,7 @@
 #include <FDISK.h>
 #include <MOUNT.h>
 #include <UNMOUNT.h>
+#include <REP.h>
 #include <list>
 #include <structs.h>
 
@@ -31,6 +32,7 @@ RMDISK_* rmdisk_ = new RMDISK_();
 FDISK_* fdisk_ = new FDISK_();
 MOUNT_* mount_ = new MOUNT_();
 UNMOUNT_* unmount_ = new UNMOUNT_();
+REP_* rep_ = new REP_();
 
 void yyerror(const char *s);
 
@@ -77,7 +79,8 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> p
 %token<STRING> e
 %token<STRING> l
-
+%token<STRING> rep
+%token<STRING> mbr
 
 /*----------------------Producciones-----------------------*/
 
@@ -102,6 +105,10 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MOUNTPARAM
 
 %type<STRING> UNMOUNT
+
+%type<STRING> REP
+%type<STRING> REPPARAMS
+%type<STRING> REPPARAM
 
 /*-------------------------------- Opciones --------------------------------------*/
 
@@ -129,6 +136,7 @@ INSTRUCCION:
     |MOUNT
     |UNMOUNT
     |PAUSE
+    |REP
     |error{}
 ;
 
@@ -209,6 +217,22 @@ UNMOUNT:
 PAUSE:
     pause_{cout<<"Presiona Enter para continuar..."<<endl;cin.ignore();}
 ;
+
+REP: 
+    rep REPPARAMS{rep_->initRep();cout<<lineaGuiones<<endl;rep_ = new REP_();}
+;
+
+REPPARAMS: 
+    REPPARAM
+    | REPPARAMS REPPARAM
+;
+
+REPPARAM: 
+    guion path igual ruta {rep_->setPath($4);}
+    | guion path igual cadena {rep_->setPath($4);}
+    | guion id_ igual id {rep_->setId($4);}
+    | guion id_ igual cadena {rep_->setId($4);}
+    | guion name igual mbr {rep_->setName($4);}
 
 %%
 

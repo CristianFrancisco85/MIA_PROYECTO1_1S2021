@@ -75,7 +75,7 @@ public:
     /**
      *Configura ruta del disco
     */
-    void REP_::configDiskPath();
+    void configDiskPath();
 
     /**
      * Inicia la ejecucion del comando
@@ -124,12 +124,12 @@ void REP_::setPath(char *value){
 
 void REP_::setId(char *value){
     if(value[0] == '\"'){
-        string aux = value;
+        string aux = id;
         aux = aux.substr(1,aux.size()-2);
         strcpy(this->id, aux.c_str());
     }
     else{
-        strcpy(this->id,value);
+        this->id = value;
     }
 }
 
@@ -178,7 +178,7 @@ bool REP_::isMounted(){
 void REP_::initRep(){
     setStatus();
     if(this->statusFlag){
-        if(this->name=="mbr"){
+        if(strcmp(this->getName(),"mbr")==0){
             reportMBR();
         }
     }
@@ -200,15 +200,17 @@ void REP_::configDiskPath(){
 //Metodos de reportes
 
 void REP_::reportMBR(){
+    this->configDiskPath();
     string diskPath = this->getRuta();
     FILE *f;
     if((f = fopen(diskPath.c_str(),"rb+"))){
+
         string dotCode = "digraph{\n";
         dotCode+= "MBR_TABLE[\n";
         dotCode+="shape=none;label=<\n";
-        dotCode+="<TABLE width='1000' height= '1000' cellspacing='-1' cellborder='1'>\n";
-        dotCode+= "<tr><td width='500'>Nombre</td><td width='500'>Valor</td></tr>";
-
+        dotCode+="<TABLE width='600' height= '1000' cellspacing='-1' cellborder='1'>\n";
+        dotCode+= "<tr><td width='300'>Nombre</td><td width='300'>Valor</td></tr>";
+        
         //Se lee el MBR
         MBR master;
         fseek(f,0,SEEK_SET);
@@ -243,7 +245,7 @@ void REP_::reportMBR(){
         dotCode += "<td>"+to_string(master.disk_fit)+"</td>";
         dotCode += "</tr>\n";
 
-        
+
         int extIndex = -1;
         //Se recorren particiones y se escriben sus datos
         for (int i = 0; i < 4; i++){
@@ -254,21 +256,21 @@ void REP_::reportMBR(){
 
                 //Se escribe Status
                 dotCode += "<tr>";
-                dotCode += "<td>part_status_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_status)+"</td>";
-                dotCode += "</tr>\n";
+                dotCode += "<td>part_status_"+to_string(i+1)+"</td><td>";
+                dotCode += master.mbr_partitions[i].part_status;
+                dotCode += "</td></tr>\n";
 
                 //Se escribe Type
                 dotCode += "<tr>";
-                dotCode += "<td>part_type_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_type)+"</td>";
-                dotCode += "</tr>\n";
+                dotCode += "<td>part_type_"+to_string(i+1)+"</td><td>";
+                dotCode += master.mbr_partitions[i].part_type;
+                dotCode += "</td></tr>\n";
 
                 //Se escribe Fit
                 dotCode += "<tr>";
-                dotCode += "<td>part_fit_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_fit)+"</td>";
-                dotCode += "</tr>\n";
+                dotCode += "<td>part_fit_"+to_string(i+1)+"</td><td>";
+                dotCode += master.mbr_partitions[i].part_fit;
+                dotCode += "</td></tr>\n";
 
                 //Se escribe Start
                 dotCode += "<tr>";
@@ -279,7 +281,7 @@ void REP_::reportMBR(){
                 //Se escribe Size
                 dotCode += "<tr>";
                 dotCode += "<td>part_size_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_size)+"</td>";
+                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_size)+" bytes</td>";
                 dotCode += "</tr>\n";
 
                 //Se escribe Name
@@ -291,6 +293,7 @@ void REP_::reportMBR(){
 
             }
         }
+        
         dotCode += "</TABLE>\n>];\n";
 
         //Si hay EBR para graficar
@@ -307,19 +310,19 @@ void REP_::reportMBR(){
                     dotCode+= "table_"+to_string(ebrIndex)+"[shape=box, label=<\n ";
                     
                     dotCode+= "<TABLE width='400' height='200' cellspacing='-1' cellborder='1' >\n";
-                    dotCode+= "<tr><td width='200'>Nombre</td><td width='200'>Valor</td></tr>";
+                    dotCode+= "<tr><td width='200'>Nombre</td><td width='200'>Valor</td></tr>\n";
 
                     //Se escribe Status
                     dotCode += "<tr>";
-                    dotCode += "<td>part_status_1</td>";
-                    dotCode += "<td>"+to_string(ebr.part_status)+"</td>";
-                    dotCode += "</tr>\n";
+                    dotCode += "<td>part_status_1</td><td>";
+                    dotCode += +ebr.part_status;
+                    dotCode += "</td></tr>\n";
 
                     //Se escribe Fit
                     dotCode += "<tr>";
-                    dotCode += "<td>part_fit_1</td>";
-                    dotCode += "<td>"+to_string(ebr.part_fit)+"</td>";
-                    dotCode += "</tr>\n";
+                    dotCode += "<td>part_fit_1</td><td>";
+                    dotCode += ebr.part_fit;
+                    dotCode += "</td></tr>\n";
 
                     //Se escribe Start
                     dotCode += "<tr>";
@@ -330,7 +333,7 @@ void REP_::reportMBR(){
                     //Se escribe Size
                     dotCode += "<tr>";
                     dotCode += "<td>part_size_1</td>";
-                    dotCode += "<td>"+to_string(ebr.part_size)+"</td>";
+                    dotCode += "<td>"+to_string(ebr.part_size)+" bytes</td>";
                     dotCode += "</tr>\n";
 
                     //Se escribe Next
@@ -346,6 +349,7 @@ void REP_::reportMBR(){
                     dotCode += ebr.part_name;
                     dotCode += "</td>";
                     dotCode += "</tr>\n";
+                    dotCode += "</TABLE>\n>];\n}";
 
                     ebrIndex++;
                 }
@@ -361,51 +365,56 @@ void REP_::reportMBR(){
         fclose(f);
 
         // Obtener la ruta.
-        string auxPath1 = this->path;
-        string auxPath2 = this->path;
+        string pathSinExt = this->path;
         string extension;
-        auxPath2 += ".txt";
-        const size_t lastPoint = auxPath1.find_last_of(".");
+        const size_t lastPoint = pathSinExt.find_last_of(".");
         if (string::npos != lastPoint){
-            auxPath1 = auxPath1.substr(0, lastPoint);
-            extension = auxPath1.substr(lastPoint, auxPath1.length());
+            extension = pathSinExt.substr(lastPoint, pathSinExt.length());
+            pathSinExt = pathSinExt.substr(0, lastPoint);
+        }
+        string auxPath2 = pathSinExt;
+        auxPath2 += ".txt";
+
+
+        string pathSinName = this->path;
+        const size_t lastSlash = pathSinName.find_last_of("/");
+        if (string::npos != lastSlash){
+            pathSinName = pathSinExt.substr(0, lastPoint);
         }
 
-        
-        char* auxPath = new char(this->path.length());
-        strcpy(auxPath, this->path.c_str());
         string comando;
 
         //Se crea carpeta si se necesita
         comando= "sudo mkdir -p \'";
-        comando+= dirname(auxPath);
+        comando+= pathSinName;
         comando+= '\'';
         system(comando.c_str());
 
-        //Permisos
+        //Se conceden permisos
         comando = "sudo chmod -R 777 \'";
-        comando+= dirname(auxPath);
+        comando+= pathSinName;
         comando += '\'';
         system(comando.c_str());
 
-        //Se elimina archivo si existe
+        //Se elimina archivo si existiera
         comando = "sudo rm '";
         comando += auxPath2 + "\'";
         system(comando.c_str());
         this_thread::sleep_for(chrono::milliseconds(1000));
+
         // Se crea el .dot
-        FILE *nuevo = fopen(auxPath2.c_str(),"w+");
-        freopen(NULL,"w+",nuevo);
+        FILE *dotFile = fopen(auxPath2.c_str(),"w+");
+        freopen(NULL,"w+",dotFile);
         char charArr[dotCode.length()];
         strcpy(charArr,dotCode.c_str());
-        fprintf(nuevo,"%s\n",charArr);
-        fclose(nuevo);
+        fprintf(dotFile,"%s\n",charArr);
+        fclose(dotFile);
         comando = "dot \'";
         comando += auxPath2;
-        comando +="\' -o \'" + auxPath1 + extension + " \' -T" + extension.substr(1,extension.length());
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        comando +="\' -o \'" + pathSinExt + extension + " \' -T" + extension.substr(1,extension.length()-1);
+        this_thread::sleep_for(chrono::milliseconds(1500));
         system(comando.c_str());
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        this_thread::sleep_for(chrono::milliseconds(1500));
         cout<< "\u001B[32m" << "[OK] Reporte MBR creado exitosamente"<< "\x1B[0m" << endl;
     }
     else{
@@ -413,6 +422,11 @@ void REP_::reportMBR(){
     }
 
 }
+
+
+
+
+
 
 
 

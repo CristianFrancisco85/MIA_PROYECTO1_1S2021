@@ -13,21 +13,13 @@ mount -name=Particion1 -path=/home/cristian/PruebAsMIA/Disco1.dk
 
 #Crea una partición primaria llamada Particion2 en Disco1.disk
 fdisk -Size=5 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion2
-mount -name=Particion2 -path=/home/cristian/PruebAsMIA/Disco1.dk
+
+
+#Crea una partición primaria llamada Particion2 en Disco1.disk
+fdisk -Size=5 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion3
 
 #Crea una partición extendida llamada Particion4 en Disco1.disk
-fdisk -Size=10 -u=m  -type=E -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
-mount -name=Particion4 -path=/home/cristian/PruebAsMIA/Disco1.dk
+fdisk -Size=10 -u=m  -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
 
-
-#Crea una partición logica llamada ParticionL1 en Particion4 en Disco1.disk
-fdisk -Size=300 -type=L -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionL1
-#Crea una partición logica llamada ParticionL2 en Particion4 en Disco1.disk
-fdisk -Size=300 -type=L -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionL2
-
-pause
-
-fdisk -Size=300 -type=L -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionL3
-fdisk -delete=full -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionL3
-fdisk -Size=300 -type=L -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionL3
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 

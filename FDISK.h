@@ -386,7 +386,7 @@ void FDISK_::createPrimaryPartition(){
                         fwrite(&master,sizeof (MBR),1,file);
 
                         //Se escribe la particion
-                        char myByte = '1';
+                        char myByte = '\0';
                         fseek(file,master.mbr_partitions[partitionIndex].part_start,SEEK_SET);
                         for(int i = 0; i < getSize(); i++){
                             fwrite(&myByte,1,1,file);
@@ -413,7 +413,7 @@ void FDISK_::createPrimaryPartition(){
                         fwrite(&master,sizeof (MBR),1,file);
 
                         //Se escribe la particion
-                        char myByte = '1';
+                        char myByte = '\0';
                         fseek(file,master.mbr_partitions[partitionIndex].part_start,SEEK_SET);
                         for(int i = 0; i < getSize(); i++){
                             fwrite(&myByte,1,1,file);
@@ -456,7 +456,7 @@ void FDISK_::createPrimaryPartition(){
                         fwrite(&master,sizeof (MBR),1,file);
 
                         //Se escribe la particion
-                        char myByte = '1';
+                        char myByte = '\0';
                         fseek(file,master.mbr_partitions[partitionIndex].part_start,SEEK_SET);
                         for(int i = 0; i < getSize(); i++){
                             fwrite(&myByte,1,1,file);
@@ -572,7 +572,7 @@ void FDISK_::createExtendedPartition(){
                             
                             //Se escribe el EBR
                             fwrite(&eBootRecord, sizeof (EBR),1,file);
-                            char myByte = '1';//Para llenar byte a byte
+                            char myByte = '\0';//Para llenar byte a byte
                             for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
                                 fwrite(&myByte,1,1,file);
                             }
@@ -610,7 +610,7 @@ void FDISK_::createExtendedPartition(){
                             
                             //Se escribe el EBR
                             fwrite(&eBootRecord, sizeof (EBR),1,file);
-                            char myByte = '1';//Para llenar byte a byte
+                            char myByte = '\0';//Para llenar byte a byte
                             for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
                                 fwrite(&myByte,1,1,file);
                             }
@@ -660,7 +660,7 @@ void FDISK_::createExtendedPartition(){
                             
                             //Se escribe el EBR
                             fwrite(&eBootRecord, sizeof (EBR),1,file);
-                            char myByte = '1';//Para llenar byte a byte
+                            char myByte = '\0';//Para llenar byte a byte
                             for(int i = getSize() - (int)sizeof (EBR); i > 0 ; i--){
                                 fwrite(&myByte,1,1,file);
                             }
