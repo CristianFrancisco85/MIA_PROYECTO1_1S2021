@@ -1,25 +1,26 @@
 #exec -path=/home/cristian/Desktop/Panel/MIA_Proyecto1/pruebas.txt
 
 #Se crea Disco 1,2,3
-mkdisk -size=25 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk
+mkdisk -size=2 -u=m -f=bf -path=/home/cristian/PruebAsMIA/Disco1.dk
 mkdisk -size=2000 -u=k -path=/home/cristian/PruebAsMIA/Disco2.dk
 
 #Se elimina disco 2
 rmdisk -path=/home/cristian/PruebAsMIA/Disco2.dk
 
 #Crea una partición primaria llamada Particion1 en Disco1.disk
-fdisk -Size=3000 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion1
+fdisk -Size=300 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion1
 mount -name=Particion1 -path=/home/cristian/PruebAsMIA/Disco1.dk
 
 #Crea una partición primaria llamada Particion2 en Disco1.disk
-fdisk -Size=5 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion2
+fdisk -Size=200 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion2
 
 
 #Crea una partición primaria llamada Particion2 en Disco1.disk
-fdisk -Size=5 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion3
+fdisk -Size=50 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion3
 
 #Crea una partición extendida llamada Particion4 en Disco1.disk
-fdisk -Size=10 -u=m  -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
+fdisk -Size=1 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
 
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk
 

@@ -81,6 +81,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> l
 %token<STRING> rep
 %token<STRING> mbr
+%token<STRING> disk
 
 /*----------------------Producciones-----------------------*/
 
@@ -233,6 +234,7 @@ REPPARAM:
     | guion id_ igual id {rep_->setId($4);}
     | guion id_ igual cadena {rep_->setId($4);}
     | guion name igual mbr {rep_->setName($4);}
+    | guion name igual disk {rep_->setName($4);}
 
 %%
 

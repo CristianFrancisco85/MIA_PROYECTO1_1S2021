@@ -57,6 +57,7 @@ id ([a-zA-Z]|[0-9]|"_")*
 "wf" {yylval.STRING = strdup(yytext);return (wf);};
 "rep" {yylval.STRING = strdup(yytext);return (rep);};
 "mbr" {yylval.STRING = strdup(yytext);return (mbr);};
+"disk" {yylval.STRING = strdup(yytext);return (disk);};
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};
 {id} {yylval.STRING = strdup(yytext);return(id);};

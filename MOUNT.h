@@ -59,12 +59,17 @@ public:
     /**
      * Getter del nombre de la particion
     */
-    string getName(){return this->name;};
+    string getName();
 
     /**
      * Getter de la ruta del disco de la partición.
     */
-    string getPath(){return this->path;};
+    string getPath();
+
+    /**
+     * Devuelve el indice de la particion en el MBR
+    */
+    int getPartitionIndex();
 
     /**
      * Getter de la letra del disco a la cual pertenece la partición
@@ -152,6 +157,33 @@ void MOUNT_::setStatus(){
     if(this->name == ""){
         cout << "\u001B[31m" << "[BAD PARAM] Name no valido" << "\x1B[0m" << endl;
     }
+}
+
+string MOUNT_::getName(){
+    return this->name;
+}
+
+int MOUNT_::getPartitionIndex(){
+    FILE *file;
+    if((file = fopen(path.c_str(),"rb+"))){
+        MBR master;
+        fseek(file,0,SEEK_SET);
+        fread(&master,sizeof(MBR),1,file);
+        for(int i = 0; i < 4; i++){
+            if(master.mbr_partitions[i].part_status != '1'){
+                if(strcmp(this->name.c_str(),master.mbr_partitions[i].part_name) == 0){
+                    fclose(file);
+                    return i;
+                }
+            }
+        }
+    }
+    fclose (file);
+    return -1;
+}
+
+string MOUNT_::getPath(){
+    return this->path;
 }
 
 char MOUNT_::getLetter(){
