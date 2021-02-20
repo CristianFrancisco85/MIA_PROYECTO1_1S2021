@@ -67,11 +67,6 @@ public:
     string getPath();
 
     /**
-     * Devuelve el indice de la particion en el MBR
-    */
-    int getPartitionIndex();
-
-    /**
      * Getter de la letra del disco a la cual pertenece la partición
     */
     char getLetter();
@@ -106,10 +101,11 @@ public:
     */
     int findPartitionIndex();
 
+
     /**
      * Busca una particion logica y regresa su indice
     */
-    int findLogicPartitionIndex();
+    int findLogicPartitionStart();
 
     /*
      * Monta la partición.
@@ -161,25 +157,6 @@ void MOUNT_::setStatus(){
 
 string MOUNT_::getName(){
     return this->name;
-}
-
-int MOUNT_::getPartitionIndex(){
-    FILE *file;
-    if((file = fopen(path.c_str(),"rb+"))){
-        MBR master;
-        fseek(file,0,SEEK_SET);
-        fread(&master,sizeof(MBR),1,file);
-        for(int i = 0; i < 4; i++){
-            if(master.mbr_partitions[i].part_status != '1'){
-                if(strcmp(this->name.c_str(),master.mbr_partitions[i].part_name) == 0){
-                    fclose(file);
-                    return i;
-                }
-            }
-        }
-    }
-    fclose (file);
-    return -1;
 }
 
 string MOUNT_::getPath(){
@@ -283,7 +260,7 @@ int MOUNT_::findPartitionIndex(){
     return -1;
 }
 
-int MOUNT_::findLogicPartitionIndex(){
+int MOUNT_::findLogicPartitionStart(){
     FILE *file;
     if(file = fopen(this->path.c_str(),"r+b")){
         
@@ -315,7 +292,7 @@ int MOUNT_::findLogicPartitionIndex(){
                 if(strcmp(this->getName().c_str(),ebr.part_name) == 0){
                     //Retorna el inicio del EBR de la particion logica encontrada
                     fclose(file);
-                    return (ftell(file) - sizeof(EBR));
+                    return (ebr.part_start - sizeof(EBR));
                 }
                 //Si ya no hay una EBR que le siga
                 if(ebr.part_next == -1){
@@ -371,7 +348,7 @@ void MOUNT_::mountPartition(){
     }
 
     //Si es particion logica
-    partitionIndex = findLogicPartitionIndex();
+    partitionIndex = findLogicPartitionStart();
     if(partitionIndex != -1){
         FILE * file = fopen(getPath().c_str(),"r+b");
         //Se lee el EBR

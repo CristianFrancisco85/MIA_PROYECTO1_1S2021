@@ -13,6 +13,7 @@
 #include <MOUNT.h>
 #include <UNMOUNT.h>
 #include <REP.h>
+#include <MKFS.h>
 #include <list>
 #include <structs.h>
 
@@ -33,6 +34,7 @@ FDISK_* fdisk_ = new FDISK_();
 MOUNT_* mount_ = new MOUNT_();
 UNMOUNT_* unmount_ = new UNMOUNT_();
 REP_* rep_ = new REP_();
+MKFS_* mkfs_ = new MKFS_();
 
 void yyerror(const char *s);
 
@@ -79,9 +81,18 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> p
 %token<STRING> e
 %token<STRING> l
+
 %token<STRING> rep
 %token<STRING> mbr
 %token<STRING> disk
+%token<STRING> inode
+%token<STRING> block
+%token<STRING> bm_block
+%token<STRING> bm_inode
+%token<STRING> sb
+
+%token<STRING> _2fs
+%token<STRING> _3fs
 
 /*----------------------Producciones-----------------------*/
 
@@ -111,6 +122,10 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> REPPARAMS
 %type<STRING> REPPARAM
 
+%type<STRING> MKFS
+%type<STRING> MKFSPARAMS
+%type<STRING> MKFSPARAM
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -138,6 +153,7 @@ INSTRUCCION:
     |UNMOUNT
     |PAUSE
     |REP
+    |MKFS
     |error{}
 ;
 
@@ -235,6 +251,30 @@ REPPARAM:
     | guion id_ igual cadena {rep_->setId($4);}
     | guion name igual mbr {rep_->setName($4);}
     | guion name igual disk {rep_->setName($4);}
+    | guion name igual inode {rep_->setName($4);}
+    | guion name igual block {rep_->setName($4);}
+    | guion name igual bm_inode {rep_->setName($4);}
+    | guion name igual bm_block {rep_->setName($4);}
+    | guion name igual sb {rep_->setName($4);}
+;
+
+MKFS: 
+    mkfs MKFSPARAMS {mkfs_->initFormat();cout<<lineaGuiones<<endl; mkfs_ = new MKFS_();}
+;
+
+MKFSPARAMS: 
+    MKFSPARAM
+    | MKFSPARAMS MKFSPARAM
+;
+
+MKFSPARAM
+    : guion id_ igual id {mkfs_->setId($4);}
+    | guion id_ igual cadena {mkfs_->setId($4);}
+    | guion type igual full {mkfs_->setTypeFormat($4);}
+    | guion type igual fast {mkfs_->setTypeFormat($4);}
+    | guion fs igual _2fs {mkfs_->setType($4);}
+    | guion fs igual _3fs {mkfs_->setType($4);}
+;
 
 %%
 

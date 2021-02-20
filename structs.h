@@ -64,7 +64,7 @@ struct SuperBloque{
     int s_first_blo; //Primero bloque libre
     int s_bm_inode_start; //Guardara el inicio del bitmap de inodos
     int s_bm_block_start; //Guardara el inicio del bitmap de bloques
-    int s_inode_start; //Guarada el inicio de la tabla de inodos
+    int s_inode_start; //Guardara el inicio de la tabla de inodos
     int s_block_start; //Guardara el inicio de la tabla de bloques
 };
 
@@ -88,7 +88,7 @@ struct InodeTable{
  * de archivos ejemplo: creacion de carpetas o archivos */
 struct Journal{
     char journal_operation_type[10];
-    int journal_type;//Archivo/Carpeta
+    int journal_type;//Archivo o Carpeta
     char journal_name[100];
     char journal_content[100];
     time_t journal_date;

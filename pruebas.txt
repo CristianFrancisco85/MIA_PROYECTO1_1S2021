@@ -9,18 +9,27 @@ rmdisk -path=/home/cristian/PruebAsMIA/Disco2.dk
 
 #Crea una partición primaria llamada Particion1 en Disco1.disk
 fdisk -Size=300 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion1
-mount -name=Particion1 -path=/home/cristian/PruebAsMIA/Disco1.dk
 
 #Crea una partición primaria llamada Particion2 en Disco1.disk
 fdisk -Size=200 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion2
-
 
 #Crea una partición primaria llamada Particion2 en Disco1.disk
 fdisk -Size=50 -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion3
 
 #Crea una partición extendida llamada Particion4 en Disco1.disk
-fdisk -Size=1 -u=m -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
+fdisk -Size=1 -u=m -type=E -path=/home/cristian/PruebAsMIA/Disco1.dk -name=Particion4
+
+#Crea una partición logica llamada ParticionLogic1 en Disco1.disk
+fdisk -Size=500 -u=k -type=L -path=/home/cristian/PruebAsMIA/Disco1.dk -name=ParticionLogic1
+
+mount -name=ParticionLogic1 -path=/home/cristian/PruebAsMIA/Disco1.dk
+
+mkfs -type=fast -fs=3fs -id=971a
 
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk
-
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInode.jpg -name=inode
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInodeBM.txt -name=bm_inode
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlockBM.txt -name=bm_block
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteSB.jpg -name=sb

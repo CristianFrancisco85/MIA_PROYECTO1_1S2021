@@ -58,6 +58,13 @@ id ([a-zA-Z]|[0-9]|"_")*
 "rep" {yylval.STRING = strdup(yytext);return (rep);};
 "mbr" {yylval.STRING = strdup(yytext);return (mbr);};
 "disk" {yylval.STRING = strdup(yytext);return (disk);};
+"inode" {yylval.STRING = strdup(yytext);return (inode);};
+"block" {yylval.STRING = strdup(yytext);return (block);};
+"bm_inode" {yylval.STRING = strdup(yytext);return (bm_inode);};
+"bm_block" {yylval.STRING = strdup(yytext);return (bm_block);};
+"sb" {yylval.STRING = strdup(yytext);return (sb);};
+"2fs" {yylval.STRING = strdup(yytext);return (_2fs);};
+"3fs" {yylval.STRING = strdup(yytext);return (_3fs);};
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};
 {id} {yylval.STRING = strdup(yytext);return(id);};
