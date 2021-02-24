@@ -252,8 +252,9 @@ void REP_::configDiskPath(){
 void REP_::reportMBR(){
     this->configDiskPath();
     string diskPath = this->getRuta();
-    FILE *f;
-    if((f = fopen(diskPath.c_str(),"rb+"))){
+    FILE *file;
+    file=fopen(diskPath.c_str(),"rb+");
+    if(file != NULL){
 
         string dotCode = "digraph{\n";
         dotCode+= "MBR_TABLE[\n";
@@ -264,8 +265,8 @@ void REP_::reportMBR(){
         
         //Se lee el MBR
         MBR master;
-        fseek(f,0,SEEK_SET);
-        fread(&master,sizeof(MBR),1,f);
+        fseek(file,0,SEEK_SET);
+        fread(&master,sizeof(MBR),1,file);
 
         //Se escribe Tamaño
         dotCode += "<tr>";
@@ -352,9 +353,9 @@ void REP_::reportMBR(){
         if(extIndex != -1){
             int ebrIndex = 1;
             EBR ebr;
-            fseek(f,master.mbr_partitions[extIndex].part_start,SEEK_SET);
+            fseek(file,master.mbr_partitions[extIndex].part_start,SEEK_SET);
             //Se leen todos los EBR y se grafica
-            while(fread(&ebr,sizeof(EBR),1,f)!=0 && (ftell(f) < master.mbr_partitions[extIndex].part_start + master.mbr_partitions[extIndex].part_size)) {
+            while(fread(&ebr,sizeof(EBR),1,file)!=0 && (ftell(file) < master.mbr_partitions[extIndex].part_start + master.mbr_partitions[extIndex].part_size)) {
 
                 if(ebr.part_status != '1'){
                     dotCode+= "subgraph cluster_"+to_string(ebrIndex)+"{\n";
@@ -409,12 +410,12 @@ void REP_::reportMBR(){
                     break;
                 }
                 else{
-                    fseek(f,ebr.part_next,SEEK_SET);
+                    fseek(file,ebr.part_next,SEEK_SET);
                 }
             }
         }
         dotCode+="}\n";
-        fclose(f);
+        fclose(file);
 
         // Obtener la ruta.
         string pathSinExt = this->path;

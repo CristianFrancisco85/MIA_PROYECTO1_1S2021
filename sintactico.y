@@ -14,6 +14,7 @@
 #include <UNMOUNT.h>
 #include <REP.h>
 #include <MKFS.h>
+#include <LOGIN.h>
 #include <list>
 #include <structs.h>
 
@@ -24,9 +25,9 @@ extern int yylex(void);
 extern char *yytext;
 extern int SourceLine;
 extern FILE *yyin;
+void yyerror(const char *s);
+
 list<MOUNT_>* mounted = new list<MOUNT_>();
-
-
 
 MKDISK_* mkdisk_ = new MKDISK_();
 RMDISK_* rmdisk_ = new RMDISK_();
@@ -35,10 +36,12 @@ MOUNT_* mount_ = new MOUNT_();
 UNMOUNT_* unmount_ = new UNMOUNT_();
 REP_* rep_ = new REP_();
 MKFS_* mkfs_ = new MKFS_();
+LOGIN_* login_ = new LOGIN_();
 
-void yyerror(const char *s);
+bool loged = false;
+Sesion sesion;
 
-string lineaGuiones="------------------------------------------------------------------------------------------------------------------------------------------------------";
+string lineaGuiones="------------------------------------------------------------------------------------------------------------------------------------------------";
 
 %}
 /*---------------Tokens de Flex--------------------*/
@@ -81,6 +84,10 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> p
 %token<STRING> e
 %token<STRING> l
+%token<STRING> login
+%token<STRING> usuario
+%token<STRING> password
+%token<STRING> logout
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -126,6 +133,12 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MKFSPARAMS
 %type<STRING> MKFSPARAM
 
+%type<STRING> LOGIN
+%type<STRING> LOGINPARAMS
+%type<STRING> LOGINPARAM
+
+%type<STRING> LOGOUT
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -154,6 +167,8 @@ INSTRUCCION:
     |PAUSE
     |REP
     |MKFS
+    |LOGIN
+    |LOGOUT
     |error{}
 ;
 
@@ -274,6 +289,29 @@ MKFSPARAM
     | guion type igual fast {mkfs_->setTypeFormat($4);}
     | guion fs igual _2fs {mkfs_->setType($4);}
     | guion fs igual _3fs {mkfs_->setType($4);}
+;
+
+LOGIN: 
+    login LOGINPARAMS {login_->initLog();cout<<lineaGuiones<<endl; login_ = new LOGIN_();}
+;
+
+LOGINPARAMS:  
+    LOGINPARAM LOGINPARAMS
+    | LOGINPARAM
+;
+
+LOGINPARAM: 
+    guion usuario igual id {login_->setUser($4);}
+    | guion usuario igual cadena {login_->setUser($4);}
+    | guion password igual id {login_->setPassword($4);}
+    | guion password igual numero {login_->setPassword($4);}
+    | guion password igual cadena {login_->setPassword($4);}
+    | guion id_ igual id {login_->setId($4);}
+    | guion id_ igual cadena {login_->setId($4);}
+;
+
+LOGOUT: 
+    logout {login_->logout();cout<<lineaGuiones<<endl;}
 ;
 
 %%

@@ -63,8 +63,14 @@ id ([a-zA-Z]|[0-9]|"_")*
 "bm_inode" {yylval.STRING = strdup(yytext);return (bm_inode);};
 "bm_block" {yylval.STRING = strdup(yytext);return (bm_block);};
 "sb" {yylval.STRING = strdup(yytext);return (sb);};
+
 "2fs" {yylval.STRING = strdup(yytext);return (_2fs);};
 "3fs" {yylval.STRING = strdup(yytext);return (_3fs);};
+"login" {yylval.STRING = strdup(yytext);return (login);};
+"usuario" {yylval.STRING = strdup(yytext);return (usuario);};
+"password" {yylval.STRING = strdup(yytext);return (password);};
+"logout" {yylval.STRING = strdup(yytext); return (logout);}
+
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};
 {id} {yylval.STRING = strdup(yytext);return(id);};

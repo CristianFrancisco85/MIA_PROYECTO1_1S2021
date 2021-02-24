@@ -234,7 +234,7 @@ void FDISK_::setStatus(){
 
     FILE *file = fopen(path, "rb+");
     if(file == NULL){
-        cout<< "\u001B[31m" << "[BAD PARAM] No existe el discooooo"<< "\x1B[0m" << endl;
+        cout<< "\u001B[31m" << "[BAD PARAM] No existe el disco"<< "\x1B[0m" << endl;
         return;
     }
     fclose(file);
@@ -321,7 +321,8 @@ void FDISK_::createPartition(){
 void FDISK_::createPrimaryPartition(){
     //Se lee MBR
     FILE *file;
-    if(file = fopen(path,"rb+")){
+    file=fopen(path,"rb+");
+    if(file != NULL){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
@@ -487,8 +488,8 @@ void FDISK_::createPrimaryPartition(){
 void FDISK_::createExtendedPartition(){
     //Se lee MBR
     FILE *file;
-
-    if(file = fopen(path,"rb+")){
+    file=fopen(path,"rb+");
+    if(file != NULL){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
@@ -692,8 +693,8 @@ void FDISK_::createExtendedPartition(){
 
 void FDISK_::createLogicPartition(){
     FILE *file;
-    
-    if(file = fopen(path,"rb+")){
+    file=fopen(path,"rb+");
+    if(file != NULL){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
@@ -832,7 +833,8 @@ void FDISK_::addToPartition(){
 void FDISK_::deletePartition(){
 
     FILE *file;
-    if((file = fopen(this->path, "r+b"))){
+    file=fopen(path,"rb+");
+    if(file != NULL){
 
         //Se verifica que no este montada
         bool mount = false;
@@ -999,7 +1001,6 @@ void FDISK_::deletePartition(){
     }
 
 }
-
 
 void FDISK_::init(){
 

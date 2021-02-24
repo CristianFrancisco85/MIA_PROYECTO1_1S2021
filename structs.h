@@ -113,3 +113,21 @@ struct BloqueApuntadores{
     int b_pointers [16];//Array con los apuntadores hacia bloques
 };
 
+
+struct Sesion{
+    int user; //Nombre de Usuario
+    int group; //Grupo del Usuario
+    int sistemaType; //Tipo de Sistemas de Archivos
+    std::string direccion; //Path del disco
+    int superStart; //Inicio del SuperBloque 
+    int journalStart; //Inicio del Journal si aplica
+    char fit; //Fit del disco
+};
+
+struct Usuario{
+    int id_usr;
+    int id_grp;
+    char username[12];
+    char password[12];
+    char group[12];
+};

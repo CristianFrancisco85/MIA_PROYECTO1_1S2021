@@ -259,7 +259,7 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
     //Configurando Bloque para carpeta Root
     strcpy(bloque.b_content[0].b_name ,"-");
     bloque.b_content[0].b_inodo= 0;
-    strcpy(bloque.b_content[1].b_name, "--");
+    strcpy(bloque.b_content[1].b_name, "-");
     bloque.b_content[1].b_inodo = 0;
     strcpy(bloque.b_content[2].b_name, "users.txt");
     bloque.b_content[2].b_inodo = 1;

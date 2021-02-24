@@ -44,8 +44,9 @@ void RMDISK_::deleteDisk(){
     if(this->statusFlag){
         
         string auxPath = this->path;
-        FILE *f;
-        if((f=fopen(this->path.c_str(),"r"))){
+        FILE *file;
+        file=fopen(path.c_str(),"r");
+        if(file != NULL){
             string command = "rm '" + string(this->path) + "'";
             system(command.c_str());
             cout << "[OK] Disco eliminado exitosamente" << endl;

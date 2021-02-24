@@ -237,7 +237,8 @@ void MOUNT_::beginToMount(){
 
 int MOUNT_::findPartitionIndex(){
     FILE *file;
-    if(file = fopen(path.c_str(),"rb+")){
+    file=fopen(path.c_str(),"rb+");
+    if(file != NULL){
         //Se lee el Master Boot Record
         MBR masterBootRecord;
         fseek(file,0,SEEK_SET);
@@ -262,7 +263,8 @@ int MOUNT_::findPartitionIndex(){
 
 int MOUNT_::findLogicPartitionStart(){
     FILE *file;
-    if(file = fopen(this->path.c_str(),"r+b")){
+    file=fopen(path.c_str(),"rb+");
+    if(file != NULL){
         
         int extendedIndex = -1;
         //Se lee el MBR
