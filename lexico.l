@@ -67,9 +67,14 @@ id ([a-zA-Z]|[0-9]|"_")*
 "2fs" {yylval.STRING = strdup(yytext);return (_2fs);};
 "3fs" {yylval.STRING = strdup(yytext);return (_3fs);};
 "login" {yylval.STRING = strdup(yytext);return (login);};
-"usuario" {yylval.STRING = strdup(yytext);return (usuario);};
-"password" {yylval.STRING = strdup(yytext);return (password);};
+"usr" {yylval.STRING = strdup(yytext);return (usr);};
+"pwd" {yylval.STRING = strdup(yytext);return (pwd);};
 "logout" {yylval.STRING = strdup(yytext); return (logout);}
+"mkgrp" {yylval.STRING = strdup(yytext); return (mkgrp);}
+"rmgrp" {yylval.STRING = strdup(yytext); return (rmgrp);}
+"grp" {yylval.STRING = strdup(yytext);return (grp);};
+"mkusr" {yylval.STRING = strdup(yytext);return (mkusr);};
+"rmusr" {yylval.STRING = strdup(yytext);return (rmusr);};
 
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};

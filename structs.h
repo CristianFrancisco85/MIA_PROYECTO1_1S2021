@@ -30,7 +30,10 @@ public:
     time_t mbr_fecha_creacion;
     int mbr_disk_signature;
     char disk_fit;
-    Partition mbr_partitions[4];
+    Partition mbr_partition_1;
+    Partition mbr_partition_2;
+    Partition mbr_partition_3;
+    Partition mbr_partition_4;
 };
 
 /**
@@ -84,16 +87,17 @@ struct InodeTable{
     
 };
 
-/* Struct para guardar un registro de las operaciones que se hacen el sistema
- * de archivos ejemplo: creacion de carpetas o archivos */
+/**
+ * Guarda Registros del Journal
+*/
 struct Journal{
-    char journal_operation_type[10];
-    int journal_type;//Archivo o Carpeta
-    char journal_name[100];
-    char journal_content[100];
-    time_t journal_date;
-    int journal_owner;
-    int journal_permissions;
+
+    int user; //User que realizo la operacion
+    char operationType[10];//Mkdir,mkfile,rem etc...
+    char path[100]; //Path de la operacion
+    char content[100]; //Data para operaciones en users.txt o mkfile int
+    time_t date; // Firma de tiempo
+    
 };
 
 struct Content{
@@ -101,14 +105,17 @@ struct Content{
     int b_inodo;//Apuntador hacia un inodo asociado al archivo o carpeta
 };
 
+//Numero 1 en bitmap
 struct BloqueCarpetas{
     Content b_content[4];//Array con el contenido de la carpeta
 };
 
+//Numero 2 en bitmap
 struct BloqueArchivos{
     char b_content[64]; //Array con el contenido del archivo
 };
 
+//Numero 3 en bitmap
 struct BloqueApuntadores{
     int b_pointers [16];//Array con los apuntadores hacia bloques
 };

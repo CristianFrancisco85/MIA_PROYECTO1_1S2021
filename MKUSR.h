@@ -1,5 +1,5 @@
-#ifndef MKGRP_H
-#define MKGRP_H
+#ifndef MKUSR_H
+#define MKUSR_H
 
 #endif // MKGRP_H
 
@@ -10,22 +10,38 @@
 
 using namespace std;
 
-class MKGRP_{
+class MKUSR_{
 private:
-    string name;
+    string user;
+    string passwd;
+    string group;
     bool statusFlag;
 public:
 
-    MKGRP_(){
-        this->name="";
+    MKUSR_(){
+        this->user="";
+        this->passwd="";
+        this->group="";
         this->statusFlag=false;
     }
 
     /**
-      *Setter del Name 
+      *Setter del User 
       * @param value: Nombre de usuario
      */
-    void setName(char* value);
+    void setUser(char* value);
+
+    /**
+      *Setter del Password 
+      * @param value: Nombre de usuario
+     */
+    void setPassword(char* value);
+
+    /**
+      *Setter del Grupo 
+      * @param value: Nombre de usuario
+     */
+    void setGroup(char* value);
 
     /**
       *Comienza la ejecucion del comando
@@ -54,15 +70,15 @@ public:
     void guardarJournal(char *operacion, char *path, char *content);
 
     /**
-     * Regresa ID del grupo y -1 si no existe
-     * @param name: Nombre del grupo
+     * Revisa si existe el suario
+     * @param name: Nombre del usuario
      */
-    int buscarGrupo(string name);
+    bool buscarUsuario(string name);
 
     /**
-     * Regresa ID para un nuevo grupo
+     * Regresa ID para un nuevo usuario
      */
-    int getIdGroup();
+    int getIdUser();
 
     /**
      *Verifica que no haya errores en el comando
@@ -74,45 +90,71 @@ public:
 extern bool loged;
 extern Sesion sesion;
 
-void MKGRP_::setName(char *value){
-    this->name = value;
-    if(this->name[0] == '\"'){
-        this->name = this->name.substr(1, this->name.length() - 2);
+void MKUSR_::setUser(char *value){
+    this->user = value;
+    if(this->user[0] == '\"'){
+        this->user = this->user.substr(1, this->user.length() - 2);
     }
 }
 
-void MKGRP_::setStatus(){
-    if(this->name != ""){
-        this->statusFlag = true;
-    }
-    else{
-        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro name "<< "\x1B[0m" << endl;
+void MKUSR_::setPassword(char *value){
+    this->passwd = value;
+    if(this->passwd[0] == '\"'){
+        this->passwd = this->passwd.substr(1, this->passwd.length() - 2);
     }
 }
 
-void MKGRP_::init(){
+void MKUSR_::setGroup(char *value){
+    this->group = value;
+    if(this->group[0] == '\"'){
+        this->group = this->group.substr(1, this->group.length() - 2);
+    }
+}
+
+void MKUSR_::setStatus(){
+    this->statusFlag=true;
+    if(this->user == ""){
+        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro User "<< "\x1B[0m" << endl;
+        this->statusFlag=false;
+    }
+    if(this->passwd ==""){
+        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro Password "<< "\x1B[0m" << endl;
+        this->statusFlag=false;
+    }
+    if(this->group == ""){
+        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro Group "<< "\x1B[0m" << endl;
+        this->statusFlag=false;
+    }
+}
+
+void MKUSR_::init(){
     setStatus();
     if(this->statusFlag){
         if(loged){
             if(sesion.user == 1 && sesion.group == 1){
 
-                int grupo = buscarGrupo(name);
-                if(grupo == -1){
-                    string grupoStr = to_string(getIdGroup())+",G,"+name+"\n";
-                    addDataToUsers(grupoStr);
-                    cout<< "\u001B[32m" << "[OK] Grupo creado exitosamente "<< "\x1B[0m" << endl;
-                    if(sesion.sistemaType == 3){
-                        char content[64];
-                        char operacion[10];
-                        char path[1];
-                        strcpy(content,grupoStr.data());
-                        strcpy(operacion,"mkgrp");
-                        path[0]='-';
-                        guardarJournal(operacion,path,content);
+                int grupo = buscarUsuario(group);
+                if(grupo != -1){
+                    if(!buscarUsuario(user)){
+                        string userStr = to_string(getIdUser())+",U,"+group+","+user+","+passwd+"\n";
+                        addDataToUsers(userStr);
+                        cout<< "\u001B[32m" << "[OK] Usuario creado exitosamente "<< "\x1B[0m" << endl;
+                        if(sesion.sistemaType == 3){
+                            char content[64];
+                            char operacion[10];
+                            char path[1];
+                            strcpy(content,userStr.data());
+                            strcpy(operacion,"mkusr");
+                            path[0]='-';
+                            guardarJournal(operacion,path,content);
+                        }
+                    }
+                    else{
+                        cout<< "\u001B[31m" << "[BAD PARAM] Ya existe un usuario con ese nombre "<< "\x1B[0m" << endl;
                     }
                 }
                 else{
-                    cout<< "\u001B[31m" << "[BAD PARAM] Ya existe un grupo con el mismo nombre "<< "\x1B[0m" << endl;
+                    cout<< "\u001B[31m" << "[BAD PARAM] No existe el grupo donde se desea crear el usuario "<< "\x1B[0m" << endl;
                 }
             }
             else{
@@ -125,7 +167,7 @@ void MKGRP_::init(){
     }
 }
 
-void MKGRP_::addDataToUsers(string newData){
+void MKUSR_::addDataToUsers(string newData){
 
     FILE *file = fopen(sesion.direccion.data(), "r+b");
 
@@ -226,7 +268,7 @@ void MKGRP_::addDataToUsers(string newData){
     }
 }
 
-int MKGRP_::buscarBit(FILE *file,char fit,char tipo){
+int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
 
     //Se lee superbloque
     SuperBloque super;
@@ -347,7 +389,7 @@ int MKGRP_::buscarBit(FILE *file,char fit,char tipo){
     return 0;
 }
 
-int MKGRP_::getIdGroup(){
+int MKUSR_::getIdUser(){
 
     FILE *file = fopen(sesion.direccion.data(),"rb+");
 
@@ -387,7 +429,7 @@ int MKGRP_::getIdGroup(){
             if(strcmp(id,"0") != 0){
                 auxToken = strtok_r(NULL,",",&endToken);
                 strcpy(tipo,auxToken);
-                if(strcmp(tipo,"G") == 0){
+                if(strcmp(tipo,"U") == 0){
                     auxID = atoi(id);
                 }
             }
@@ -401,7 +443,7 @@ int MKGRP_::getIdGroup(){
     }
 }
 
-void MKGRP_::guardarJournal(char* operacion,char *path,char *content){
+void MKUSR_::guardarJournal(char* operacion,char *path,char *content){
     
     
     FILE *file = fopen(sesion.direccion.data(),"r+b");
@@ -442,7 +484,7 @@ void MKGRP_::guardarJournal(char* operacion,char *path,char *content){
     
 }
 
-int MKGRP_::buscarGrupo(string name){
+bool MKUSR_::buscarUsuario(string name){
     
     FILE *file = fopen(sesion.direccion.data(),"r+b");
 
@@ -474,24 +516,26 @@ int MKGRP_::buscarGrupo(string name){
         while(lineToken != NULL){
             char id[2];
             char tipo[2];
-            char group[15];
+            char user[15];
             char *endToken;
             char *auxToken = strtok_r(lineToken,",",&endToken);
             strcpy(id,auxToken);
             if(strcmp(id,"0") != 0){
                 auxToken = strtok_r(NULL,",",&endToken);
                 strcpy(tipo,auxToken);
-                if(strcmp(tipo,"G") == 0){
-                    strcpy(group,endToken);
-                    if(strcmp(group,name.data()) == 0){
-                        return atoi(id);
+                if(strcmp(tipo,"U") == 0){
+                    auxToken = strtok_r(NULL,",",&endToken);
+                    auxToken = strtok_r(NULL,",",&endToken);
+                    strcpy(user,auxToken);
+                    if(strcmp(user,name.c_str()) == 0){
+                        return true;
                     }
                 }
             }
             lineToken = strtok_r(NULL,"\n",&endString);
         }
+        
     }
-    
 
-    return -1;
+    return false;
 }

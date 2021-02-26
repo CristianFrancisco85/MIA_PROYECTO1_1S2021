@@ -15,6 +15,10 @@
 #include <REP.h>
 #include <MKFS.h>
 #include <LOGIN.h>
+#include <MKGRP.h>
+#include <RMGRP.h>
+#include <MKUSR.h>
+#include <RMUSR.h>
 #include <list>
 #include <structs.h>
 
@@ -37,6 +41,10 @@ UNMOUNT_* unmount_ = new UNMOUNT_();
 REP_* rep_ = new REP_();
 MKFS_* mkfs_ = new MKFS_();
 LOGIN_* login_ = new LOGIN_();
+MKGRP_* mkgrp_ = new MKGRP_();
+RMGRP_* rmgrp_ = new RMGRP_();
+MKUSR_* mkusr_ = new MKUSR_();
+RMUSR_* rmusr_ = new RMUSR_();
 
 bool loged = false;
 Sesion sesion;
@@ -85,9 +93,14 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> e
 %token<STRING> l
 %token<STRING> login
-%token<STRING> usuario
-%token<STRING> password
+%token<STRING> usr
+%token<STRING> pwd
 %token<STRING> logout
+%token<STRING> mkgrp
+%token<STRING> rmgrp
+%token<STRING> grp
+%token<STRING> mkusr
+%token<STRING> rmusr
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -139,6 +152,16 @@ string lineaGuiones="-----------------------------------------------------------
 
 %type<STRING> LOGOUT
 
+%type<STRING> MKGRP
+
+%type<STRING> RMGRP
+
+%type<STRING> MKUSR
+%type<STRING> MKUSRPARAMS
+%type<STRING> MKUSRPARAM
+
+%type<STRING> RMUSR
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -169,6 +192,10 @@ INSTRUCCION:
     |MKFS
     |LOGIN
     |LOGOUT
+    |MKGRP
+    |RMGRP
+    |MKUSR
+    |RMUSR
     |error{}
 ;
 
@@ -221,9 +248,9 @@ FDISKPARAM:
     | guion delete__ igual full {fdisk_->setDelete($4);}
     | guion add__ igual numero {fdisk_->setAdd($4);}
     | guion add__ igual numero_negativo {fdisk_->setAdd($4);}
-    | guion type igual p {fdisk_->setType($4);}
-    | guion type igual e {fdisk_->setType($4);}
-    | guion type igual l {fdisk_->setType($4);}
+    | guion type igual p {fdisk_->setPartitionType($4);}
+    | guion type igual e {fdisk_->setPartitionType($4);}
+    | guion type igual l {fdisk_->setPartitionType($4);}
 ;
  
 MOUNT: 
@@ -301,11 +328,11 @@ LOGINPARAMS:
 ;
 
 LOGINPARAM: 
-    guion usuario igual id {login_->setUser($4);}
-    | guion usuario igual cadena {login_->setUser($4);}
-    | guion password igual id {login_->setPassword($4);}
-    | guion password igual numero {login_->setPassword($4);}
-    | guion password igual cadena {login_->setPassword($4);}
+    guion usr igual id {login_->setUser($4);}
+    | guion usr igual cadena {login_->setUser($4);}
+    | guion pwd igual id {login_->setPassword($4);}
+    | guion pwd igual numero {login_->setPassword($4);}
+    | guion pwd igual cadena {login_->setPassword($4);}
     | guion id_ igual id {login_->setId($4);}
     | guion id_ igual cadena {login_->setId($4);}
 ;
@@ -313,6 +340,41 @@ LOGINPARAM:
 LOGOUT: 
     logout {login_->logout();cout<<lineaGuiones<<endl;}
 ;
+
+MKGRP: 
+    mkgrp guion name igual id {mkgrp_->setName($5);mkgrp_->init();cout<<lineaGuiones<<endl;mkgrp_ = new MKGRP_();}
+    | mkgrp guion name igual cadena {mkgrp_->setName($5);mkgrp_->init();cout<<lineaGuiones<<endl;mkgrp_ = new MKGRP_();}
+;
+
+RMGRP: 
+    rmgrp guion name igual id {rmgrp_->setName($5);rmgrp_->init();cout<<lineaGuiones<<endl;rmgrp_ = new RMGRP_();}
+    | rmgrp guion name igual cadena {rmgrp_->setName($5);rmgrp_->init();cout<<lineaGuiones<<endl;rmgrp_ = new RMGRP_();}
+;
+
+MKUSR: 
+    mkusr MKUSRPARAMS {mkusr_->init();cout<<lineaGuiones<<endl; mkusr_ = new MKUSR_();}
+;
+
+MKUSRPARAMS: 
+    MKUSRPARAM MKUSRPARAMS
+    | MKUSRPARAM
+;
+
+MKUSRPARAM: 
+    guion usr igual id  {mkusr_->setUser($4);}
+    | guion usr igual cadena {mkusr_->setUser($4);}
+    | guion pwd igual id {mkusr_->setPassword($4);}
+    | guion pwd igual cadena {mkusr_->setPassword($4);}
+    | guion pwd igual numero {mkusr_->setPassword($4);}
+    | guion grp igual id {mkusr_->setGroup($4);}
+    | guion grp igual cadena {mkusr_->setGroup($4);}
+;
+
+RMUSR: 
+    rmusr guion usr igual id {rmusr_->setUser($5);rmusr_->init();cout<<lineaGuiones<<endl;rmusr_ = new RMUSR_();}
+    | rmusr guion usr igual cadena {rmusr_->setUser($5);rmusr_->init();cout<<lineaGuiones<<endl;rmusr_ = new RMUSR_();}
+;
+
 
 %%
 

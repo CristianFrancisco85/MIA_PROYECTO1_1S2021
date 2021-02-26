@@ -63,11 +63,11 @@ void RMDISK_::deleteDisk(){
 void RMDISK_::setStatus(){
     this->statusFlag = false;
     if(this->path[0] == '/'){
-        if(string(this->path) != "/"){
-            this->statusFlag = true;
+        if(string(this->path) == "/"){
+            cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
         }
         else{
-            cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
+            this->statusFlag = true;
         }
     }
     else{

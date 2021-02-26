@@ -267,6 +267,11 @@ void REP_::reportMBR(){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
 
         //Se escribe Tamaño
         dotCode += "<tr>";
@@ -302,46 +307,46 @@ void REP_::reportMBR(){
         int extIndex = -1;
         //Se recorren particiones y se escriben sus datos
         for (int i = 0; i < 4; i++){
-            if(master.mbr_partitions[i].part_status!='1' && master.mbr_partitions[i].part_start!=-1){
-                if(master.mbr_partitions[i].part_type == 'E'){
+            if(mbr_partitions[i]->part_status!='1' && mbr_partitions[i]->part_start!=-1){
+                if(mbr_partitions[i]->part_type == 'E'){
                     extIndex = i;
                 }
 
                 //Se escribe Status
                 dotCode += "<tr>";
                 dotCode += "<td>part_status_"+to_string(i+1)+"</td><td>";
-                dotCode += master.mbr_partitions[i].part_status;
+                dotCode += mbr_partitions[i]->part_status;
                 dotCode += "</td></tr>\n";
 
                 //Se escribe Type
                 dotCode += "<tr>";
                 dotCode += "<td>part_type_"+to_string(i+1)+"</td><td>";
-                dotCode += master.mbr_partitions[i].part_type;
+                dotCode += mbr_partitions[i]->part_type;
                 dotCode += "</td></tr>\n";
 
                 //Se escribe Fit
                 dotCode += "<tr>";
                 dotCode += "<td>part_fit_"+to_string(i+1)+"</td><td>";
-                dotCode += master.mbr_partitions[i].part_fit;
+                dotCode += mbr_partitions[i]->part_fit;
                 dotCode += "</td></tr>\n";
 
                 //Se escribe Start
                 dotCode += "<tr>";
                 dotCode += "<td>part_start_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_start)+"</td>";
+                dotCode += "<td>"+to_string(mbr_partitions[i]->part_start)+"</td>";
                 dotCode += "</tr>\n";
 
                 //Se escribe Size
                 dotCode += "<tr>";
                 dotCode += "<td>part_size_"+to_string(i+1)+"</td>";
-                dotCode += "<td>"+to_string(master.mbr_partitions[i].part_size)+" bytes</td>";
+                dotCode += "<td>"+to_string(mbr_partitions[i]->part_size)+" bytes</td>";
                 dotCode += "</tr>\n";
 
                 //Se escribe Name
                 dotCode += "<tr>";
                 dotCode += "<td>part_name_"+to_string(i+1)+"</td>";
                 dotCode += "<td>";
-                dotCode += master.mbr_partitions[i].part_name;
+                dotCode += mbr_partitions[i]->part_name;
                 dotCode += "</td> </tr>\n";
 
             }
@@ -353,9 +358,9 @@ void REP_::reportMBR(){
         if(extIndex != -1){
             int ebrIndex = 1;
             EBR ebr;
-            fseek(file,master.mbr_partitions[extIndex].part_start,SEEK_SET);
+            fseek(file,mbr_partitions[extIndex]->part_start,SEEK_SET);
             //Se leen todos los EBR y se grafica
-            while(fread(&ebr,sizeof(EBR),1,file)!=0 && (ftell(file) < master.mbr_partitions[extIndex].part_start + master.mbr_partitions[extIndex].part_size)) {
+            while(fread(&ebr,sizeof(EBR),1,file)!=0) {
 
                 if(ebr.part_status != '1'){
                     dotCode+= "subgraph cluster_"+to_string(ebrIndex)+"{\n";
@@ -491,34 +496,39 @@ void REP_::reportDisk(){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
-        int diskSize = master.mbr_tamano;
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
         double usedSpaceTotal = 0;
         for(int i = 0; i < 4; i++){
-            if(master.mbr_partitions[i].part_start > -1){
+            if(mbr_partitions[i]->part_start > -1){
 
-                double usedSpace = (master.mbr_partitions[i].part_size*100)/diskSize;
+                double usedSpace = (mbr_partitions[i]->part_size*100)/master.mbr_tamano;
                 usedSpaceTotal += usedSpace;
                 
-                if(master.mbr_partitions[i].part_status != '1'){
-                    if(master.mbr_partitions[i].part_type == 'P'){
+                if(mbr_partitions[i]->part_status != '1'){
+                    if(mbr_partitions[i]->part_type == 'P'){
                         dotCode+=  "<td height='180' width='200'> Primaria<br/>"+to_string(usedSpace)+"% del disco</td>\n";
                         //Se verifica si no hay espacio libre
-                        int partEnd = master.mbr_partitions[i].part_start + master.mbr_partitions[i].part_size;
+                        int partEnd = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
                         if(i!=3){
-                            int exact = master.mbr_partitions[i+1].part_start;
-                            if(master.mbr_partitions[i+1].part_start != -1){
+                            int exact = mbr_partitions[i+1]->part_start;
+                            if(mbr_partitions[i+1]->part_start != -1){
                                 if((exact-partEnd)!=0){
-                                    double aux =  ((exact-partEnd)*100)/diskSize;
+                                    double aux =  ((exact-partEnd)*100)/master.mbr_tamano;
                                     aux = (aux*500)/100;
                                     dotCode+= "<td height='120' width='"+to_string(aux)+"'>LIBRE<br/>"+"% del disco</td>\n";
                                 }
                             }
                         }
                         else{
-                            int mbrSize = diskSize + (int)sizeof(MBR);
-                            if((diskSize + (int)sizeof(MBR)-partEnd)!=0){
+                            int mbrSize = master.mbr_tamano + (int)sizeof(MBR);
+                            if((master.mbr_tamano + (int)sizeof(MBR)-partEnd)!=0){
                                 double freeSpace = (mbrSize - partEnd) + sizeof(MBR);
-                                freeSpace = (freeSpace*100)/diskSize;
+                                freeSpace = (freeSpace*100)/master.mbr_tamano;
                                 dotCode+=  "<td height='120' width='"+to_string(freeSpace*4)+"'>Libre<br/>"+to_string(freeSpace)+"% del disco</td>\n";
                             }
                         }
@@ -530,14 +540,14 @@ void REP_::reportDisk(){
 
                         //Se lee el EBR
                         EBR ebr;
-                        fseek(file, master.mbr_partitions[i].part_start,SEEK_SET);
+                        fseek(file, mbr_partitions[i]->part_start,SEEK_SET);
                         fread(&ebr,sizeof(EBR),1,file);
 
                         if(ebr.part_size != 0){
-                            fseek(file, master.mbr_partitions[i].part_start,SEEK_SET);
-                            while((ftell(file) < (master.mbr_partitions[i].part_start + master.mbr_partitions[i].part_size)) && fread(&ebr,sizeof (EBR),1,file)!=0){
+                            fseek(file, mbr_partitions[i]->part_start,SEEK_SET);
+                            while(fread(&ebr,sizeof (EBR),1,file)!=0){
 
-                                double porcentaje = (ebr.part_size*100)/diskSize;
+                                double porcentaje = (ebr.part_size*100)/master.mbr_tamano;
                                 if(porcentaje!=0){
                                     if(ebr.part_status != '1'){
                                         dotCode+=  "<td height='120' width='75'> EBR </td>\n";
@@ -547,8 +557,8 @@ void REP_::reportDisk(){
                                         dotCode+=  "<td height='120' width='150'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n";
                                     }
                                     if(ebr.part_next==-1){
-                                        porcentaje = (master.mbr_partitions[i].part_start + master.mbr_partitions[i].part_size) - (ebr.part_start + ebr.part_size);
-                                        porcentaje = (porcentaje*100)/diskSize;
+                                        porcentaje = (mbr_partitions[i]->part_start + mbr_partitions[i]->part_size) - (ebr.part_start + ebr.part_size);
+                                        porcentaje = (porcentaje*100)/master.mbr_tamano;
                                         if(porcentaje!=0){
                                             dotCode+=  "<td height='120' width='150'>Libre<br/> "+to_string(porcentaje)+"% del disco</td>\n";
                                         }
@@ -566,21 +576,21 @@ void REP_::reportDisk(){
                         dotCode+= "</tr>\n</TABLE>\n</td>\n";
 
                         if(i!=3){
-                            int aux1 = master.mbr_partitions[i].part_start + master.mbr_partitions[i].part_size;
-                            int aux2 = master.mbr_partitions[i+1].part_start;
+                            int aux1 = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
+                            int aux2 = mbr_partitions[i+1]->part_start;
                             if(aux2 != -1){
                                 if((aux2-aux1)!=0){
-                                    double porcentaje = ((aux2-aux1)*100)/diskSize;
+                                    double porcentaje = ((aux2-aux1)*100)/master.mbr_tamano;
                                     dotCode+= "<td height='120' width='200'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n";
                                 }
                             }
                         }
                         else{
-                            int aux1 = master.mbr_partitions[i].part_start + master.mbr_partitions[i].part_size;
-                            int mbrSize = diskSize + (int)sizeof(MBR);
+                            int aux1 = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
+                            int mbrSize = master.mbr_tamano + (int)sizeof(MBR);
                             if((mbrSize-aux1)!=0){
                                 double porcentaje = (mbrSize - aux1) + sizeof(MBR);
-                                porcentaje = (porcentaje*100)/diskSize;
+                                porcentaje = (porcentaje*100)/master.mbr_tamano;
                                 dotCode+= "<td height='120' width='100'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n";
                             }
                         }
@@ -672,7 +682,13 @@ void REP_::reportInode(){
         SuperBloque super;
         FILE *file = fopen(disk->getPath().c_str(),"r+b");
         fread(&master,sizeof(MBR),1,file);
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
         InodeTable auxInodo;
@@ -920,11 +936,17 @@ void REP_::reportBloque(){
     partIndex = disk->findPartitionIndex();
 
     if(partIndex != -1){
-        MBR masterboot;
+        MBR master;
         SuperBloque super;
         FILE *file = fopen(disk->getPath().data(),"r+b");
-        fread(&masterboot,sizeof(MBR),1,file);
-        fseek(file,masterboot.mbr_partitions[partIndex].part_start,SEEK_SET);
+        fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
         int aux = super.s_bm_block_start;
@@ -1174,7 +1196,13 @@ void REP_::reportBitMapInodos(){
         SuperBloque super;
         FILE *file = fopen(disk->getPath().data(),"r+b");
         fread(&master,sizeof(MBR),1,file);
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
         char myByte;
@@ -1263,7 +1291,12 @@ void REP_::reportBitMapBloques(){
         SuperBloque super;
         FILE *file = fopen(disk->getPath().data(),"r+b");
         fread(&master,sizeof(MBR),1,file);
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
         char myByte;
@@ -1350,9 +1383,13 @@ void REP_::reportSuperBloque(){
         SuperBloque super;
         FILE *file = fopen(disk->getPath().data(),"r+b");
         fread(&master,sizeof(MBR),1,file);
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
 
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof (super),1,file);
 
         string dotCode = "digraph G{\n";

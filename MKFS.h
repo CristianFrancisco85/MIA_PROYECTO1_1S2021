@@ -158,9 +158,14 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
         fseek(file,0, SEEK_SET);
         fread(&master,sizeof (MBR),1,file);
         fclose(file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
 
-        partStart = master.mbr_partitions[partIndex].part_start;
-        partSize = master.mbr_partitions[partIndex].part_size;
+        partStart = mbr_partitions[partIndex]->part_start;
+        partSize = mbr_partitions[partIndex]->part_size;
     }
     else{
         EBR extendedBoot;
@@ -203,7 +208,7 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
     
     
     //Se configura Tabla de Inodos y Bloques Iniciales
-    InodeTable iNode;
+    InodeTable inodo;
     BloqueCarpetas bloque;
     
     file = fopen(aux->getPath().data(),"r+b");
@@ -219,7 +224,7 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
         fwrite(&myChar,sizeof(char),1,file);
     }
 
-    //Se marca bit para raiz y user.txt
+    //Se marca bit para /root y user.txt
     myChar = '1';
     fseek(file,super.s_bm_inode_start,SEEK_SET);
     fwrite(&myChar,sizeof(char),1,file);
@@ -232,7 +237,7 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
         fwrite(&myChar,sizeof(char),1,file);
     }
 
-    //Se marca bit para raiz y user.txt
+    //Se marca bit para /root y user.txt
     myChar = '1';
     fseek(file,super.s_bm_block_start,SEEK_SET);
     fwrite(&myChar,sizeof(char),1,file);
@@ -240,21 +245,21 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
     fwrite(&myChar,sizeof(char),1,file);
 
     //Configurando Inodo para Root
-    iNode.i_uid = 1;
-    iNode.i_gid = 1;
-    iNode.i_size = 0;
-    iNode.i_atime = time(nullptr);
-    iNode.i_ctime = time(nullptr);
-    iNode.i_mtime = time(nullptr);
-    iNode.i_block[0] = 0;
+    inodo.i_uid = 1;
+    inodo.i_gid = 1;
+    inodo.i_size = 0;
+    inodo.i_atime = time(nullptr);
+    inodo.i_ctime = time(nullptr);
+    inodo.i_mtime = time(nullptr);
+    inodo.i_block[0] = 0;
     for(int i = 1 ; i < 15;i++){
-        iNode.i_block[i] = -1;
+        inodo.i_block[i] = -1;
     }
-    iNode.i_type = '0';
-    iNode.i_perm = 664;
+    inodo.i_type = '0';
+    inodo.i_perm = 664;
     
     fseek(file,super.s_inode_start, SEEK_SET);
-    fwrite(&iNode,sizeof (InodeTable),1,file);
+    fwrite(&inodo,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta Root
     strcpy(bloque.b_content[0].b_name ,"-");
@@ -271,20 +276,20 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
     fwrite(&bloque, sizeof (BloqueArchivos),1,file);
 
     //Configurando Inodo para users.txt
-    iNode.i_gid = 1;
-    iNode.i_uid = 1;
-    iNode.i_size = 27;              
-    iNode.i_atime = time(nullptr);
-    iNode.i_ctime = time(nullptr);
-    iNode.i_mtime = time(nullptr);
-    iNode.i_block[0] = 1;
+    inodo.i_gid = 1;
+    inodo.i_uid = 1;
+    inodo.i_size = 27;              
+    inodo.i_atime = time(nullptr);
+    inodo.i_ctime = time(nullptr);
+    inodo.i_mtime = time(nullptr);
+    inodo.i_block[0] = 1;
     for(int i = 1 ; i < 15;i++){
-        iNode.i_block[i] = -1;
+        inodo.i_block[i] = -1;
     }
-    iNode.i_type = '1';
-    iNode.i_perm = 755;
-    fseek(file,super.s_inode_start+static_cast<int>(sizeof(InodeTable)),SEEK_SET);
-    fwrite(&iNode,sizeof (InodeTable),1,file);
+    inodo.i_type = '1';
+    inodo.i_perm = 755;
+    fseek(file,super.s_inode_start+sizeof(InodeTable),SEEK_SET);
+    fwrite(&inodo,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta users.txt
     BloqueArchivos archivoBin;
@@ -311,9 +316,14 @@ void MKFS_::formatExt2(int partIndex,MOUNT_ *aux){
         fseek(file,0, SEEK_SET);
         fread(&master,sizeof (MBR),1,file);
         fclose(file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
 
-        partStart = master.mbr_partitions[partIndex].part_start;
-        partSize = master.mbr_partitions[partIndex].part_size;
+        partStart = mbr_partitions[partIndex]->part_start;
+        partSize = mbr_partitions[partIndex]->part_size;
     }
     else{
         EBR extendedBoot;
@@ -358,7 +368,7 @@ void MKFS_::formatExt2(int partIndex,MOUNT_ *aux){
     
     
     //Se configura Tabla de Inodos y Bloques Iniciales
-    InodeTable iNode;
+    InodeTable inode;
     BloqueCarpetas bloque;
     
     file = fopen(aux->getPath().data(),"r+b");
@@ -395,26 +405,26 @@ void MKFS_::formatExt2(int partIndex,MOUNT_ *aux){
     fwrite(&myChar,sizeof(char),1,file);
 
     //Configurando Inodo para Root
-    iNode.i_uid = 1;
-    iNode.i_gid = 1;
-    iNode.i_size = 0;
-    iNode.i_atime = time(nullptr);
-    iNode.i_ctime = time(nullptr);
-    iNode.i_mtime = time(nullptr);
-    iNode.i_block[0] = 0;
+    inode.i_uid = 1;
+    inode.i_gid = 1;
+    inode.i_size = 0;
+    inode.i_atime = time(nullptr);
+    inode.i_ctime = time(nullptr);
+    inode.i_mtime = time(nullptr);
+    inode.i_block[0] = 0;
     for(int i = 1 ; i < 15;i++){
-        iNode.i_block[i] = -1;
+        inode.i_block[i] = -1;
     }
-    iNode.i_type = '0';
-    iNode.i_perm = 664;
+    inode.i_type = '0';
+    inode.i_perm = 664;
     
     fseek(file,super.s_inode_start, SEEK_SET);
-    fwrite(&iNode,sizeof (InodeTable),1,file);
+    fwrite(&inode,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta Root
     strcpy(bloque.b_content[0].b_name ,"-");
     bloque.b_content[0].b_inodo= 0;
-    strcpy(bloque.b_content[1].b_name, "--");
+    strcpy(bloque.b_content[1].b_name, "-");
     bloque.b_content[1].b_inodo = 0;
     strcpy(bloque.b_content[2].b_name, "users.txt");
     bloque.b_content[2].b_inodo = 1;
@@ -426,20 +436,20 @@ void MKFS_::formatExt2(int partIndex,MOUNT_ *aux){
     fwrite(&bloque, sizeof (BloqueArchivos),1,file);
 
     //Configurando Inodo para users.txt
-    iNode.i_gid = 1;
-    iNode.i_uid = 1;
-    iNode.i_size = 27;              
-    iNode.i_atime = time(nullptr);
-    iNode.i_ctime = time(nullptr);
-    iNode.i_mtime = time(nullptr);
-    iNode.i_block[0] = 1;
+    inode.i_gid = 1;
+    inode.i_uid = 1;
+    inode.i_size = 27;              
+    inode.i_atime = time(nullptr);
+    inode.i_ctime = time(nullptr);
+    inode.i_mtime = time(nullptr);
+    inode.i_block[0] = 1;
     for(int i = 1 ; i < 15;i++){
-        iNode.i_block[i] = -1;
+        inode.i_block[i] = -1;
     }
-    iNode.i_type = '1';
-    iNode.i_perm = 755;
+    inode.i_type = '1';
+    inode.i_perm = 755;
     fseek(file,super.s_inode_start+static_cast<int>(sizeof(InodeTable)),SEEK_SET);
-    fwrite(&iNode,sizeof (InodeTable),1,file);
+    fwrite(&inode,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta users.txt
     BloqueArchivos archivoBin;

@@ -240,13 +240,19 @@ int MOUNT_::findPartitionIndex(){
     file=fopen(path.c_str(),"rb+");
     if(file != NULL){
         //Se lee el Master Boot Record
-        MBR masterBootRecord;
+        MBR master;
         fseek(file,0,SEEK_SET);
-        fread(&masterBootRecord,sizeof(MBR),1,file);
+        fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
         for(int i = 0; i < 4; i++){
-            if(masterBootRecord.mbr_partitions[i].part_status != '1'){
+            if(mbr_partitions[i]->part_status != '1'){
                 //Si es la particion
-                if(strcmp(masterBootRecord.mbr_partitions[i].part_name,name.c_str()) == 0){
+                if(strcmp(mbr_partitions[i]->part_name,name.c_str()) == 0){
                     fclose(file);
                     return i;
                 }
@@ -271,9 +277,15 @@ int MOUNT_::findLogicPartitionStart(){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
         //Se busca en el arreglo de particiones la particion extendida
         for(int i = 0; i < 4; i++){
-            if(master.mbr_partitions[i].part_type == 'E'){
+            if(mbr_partitions[i]->part_type == 'E'){
                 extendedIndex = i;
                 break;
             }
@@ -282,14 +294,12 @@ int MOUNT_::findLogicPartitionStart(){
         if(extendedIndex != -1){
             //Se lee Extended Boot Record
             EBR ebr;
-            fseek(file, master.mbr_partitions[extendedIndex].part_start,SEEK_SET);
+            fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
             fread(&ebr,sizeof (EBR),1,file);
-            fseek(file, master.mbr_partitions[extendedIndex].part_start,SEEK_SET);
+            fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
             
             //se busca la particion logica
-            while(
-            fread(&ebr,sizeof(EBR),1,file)!=0 && 
-            (ftell(file) < master.mbr_partitions[extendedIndex].part_size + master.mbr_partitions[extendedIndex].part_start)){
+            while(fread(&ebr,sizeof(EBR),1,file)!=0){
 
                 if(strcmp(this->getName().c_str(),ebr.part_name) == 0){
                     //Retorna el inicio del EBR de la particion logica encontrada
@@ -324,18 +334,23 @@ void MOUNT_::mountPartition(){
     if(partitionIndex != -1){
         FILE*file= fopen(this->path.c_str(),"r+b");
         //Se lee MBR
-        MBR masterBootRecord;
+        MBR master;
         fseek(file,0,SEEK_SET);
-        fread(&masterBootRecord,sizeof (MBR),1,file);
+        fread(&master,sizeof (MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
         //Se cambia el estatus a montado
-        masterBootRecord.mbr_partitions[partitionIndex].part_status = '2';
+        mbr_partitions[partitionIndex]->part_status = '2';
 
         //Se actualiza MBR
         fseek(file,0, SEEK_SET);
-        fwrite(&masterBootRecord,sizeof (MBR),1,file);
+        fwrite(&master,sizeof (MBR),1,file);
         fseek(file,0,SEEK_SET);
         //Se vuelve a leer MBR
-        fread(&masterBootRecord, sizeof (MBR),1,file);
+        fread(&master, sizeof (MBR),1,file);
         fclose(file);
 
         if(isMounted()){

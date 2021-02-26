@@ -124,24 +124,22 @@ void LOGIN_::initLog(){
     if(this->statusFlag){
         if(!loged){
             int aux = makeLog();
-            switch (aux){
-            case 0:
+            if(aux=0){
                 cout<< "\u001B[31m" << "[Error] Usuario Invalido"<< "\x1B[0m" << endl;
-                break;
-            case 1:
+            }
+            else if(aux=1){
                 loged=true;
-                cout<< "\u001B[32m" << "[Error] Sesion iniciada exitosamente "<< "\x1B[0m" << endl;
-                break;
-            case 2:
+                cout<< "\u001B[32m" << "[OK] Sesion iniciada exitosamente "<< "\x1B[0m" << endl;
+            }
+            else if(aux=2){
                 cout<< "\u001B[31m" << "[Error] Contraseña invalida "<< "\x1B[0m" << endl;
-                break;
-            default:
-                cout<< "\u001B[31m" << "[Error] No se puede iniciar session"<< "\x1B[0m" << endl;
-                break;
+            }
+            else{
+                cout<< "\u001B[31m" << "[Error] No se puede iniciar sesion"<< "\x1B[0m" << endl;
             }
         }
         else{
-            cout<< "\u001B[31m" << "[Error] Ya hay una session activa, haga logout "<< "\x1B[0m" << endl;
+            cout<< "\u001B[31m" << "[Error] Ya hay una sesion activa, haga logout "<< "\x1B[0m" << endl;
         }
     }
 }
@@ -169,10 +167,15 @@ int LOGIN_::makeLog(){
         //Se lee MBR
         MBR master;
         fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
         
         //Se lee SuperBloque
         SuperBloque super;
-        fseek(file,master.mbr_partitions[partIndex].part_start,SEEK_SET);
+        fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
         //Se lee Tabla de Inodos
@@ -185,10 +188,10 @@ int LOGIN_::makeLog(){
         fwrite(&inodo,sizeof(InodeTable),1,file);
         fclose(file);
 
-        sesion.superStart = master.mbr_partitions[partIndex].part_start;
-        sesion.journalStart = master.mbr_partitions[partIndex].part_start + static_cast<int>(sizeof(SuperBloque));
+        sesion.superStart = mbr_partitions[partIndex]->part_start;
+        sesion.journalStart = mbr_partitions[partIndex]->part_start + static_cast<int>(sizeof(SuperBloque));
         sesion.sistemaType = super.s_filesystem_type;
-        sesion.fit = master.mbr_partitions[partIndex].part_fit;
+        sesion.fit = mbr_partitions[partIndex]->part_fit;
 
         diskPath = disk->getPath();
         
@@ -254,8 +257,8 @@ int LOGIN_::makeLog(){
 
     //Se parsea el archivo
     char *endString;
-    char *token = strtok_r(auxArr,"\n",&endString);
-    while(token != NULL){
+    char *lineToken = strtok_r(auxArr,"\n",&endString);
+    while(lineToken != NULL){
         //Arreglos para guardar los datos
         char id[2];
         char tipo[2];
@@ -264,7 +267,7 @@ int LOGIN_::makeLog(){
         char passwdArr[15];
 
         char *endToken;
-        char *auxToken = strtok_r(token,",",&endToken);
+        char *auxToken = strtok_r(lineToken,",",&endToken);
         strcpy(id,auxToken);
         if(strcmp(id,"0") != 0){
             auxToken=strtok_r(NULL,",",&endToken);
@@ -290,7 +293,7 @@ int LOGIN_::makeLog(){
                 }
             }
         }
-        token = strtok_r(nullptr,"\n",&endString);
+        lineToken = strtok_r(nullptr,"\n",&endString);
     }
 
     return 0;
@@ -305,21 +308,35 @@ char LOGIN_::getLogicPartFit(string path){
         MBR master;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
+
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
         for(int i = 0; i < 4; i++){
-            if(master.mbr_partitions[i].part_type == 'E'){
+            if(mbr_partitions[i]->part_type == 'E'){
                 extendedIndex = i;
                 break;
             }
         }
         if(extendedIndex != -1){
-            EBR extendedBoot;
-            fseek(file, master.mbr_partitions[extendedIndex].part_start,SEEK_SET);
-            while(fread(&extendedBoot,sizeof(EBR),1,file)!=0 && (ftell(file) < master.mbr_partitions[extendedIndex].part_start + master.mbr_partitions[extendedIndex].part_size)){
-                if(strcmp(id.data(),extendedBoot.part_name) == 0){
+            EBR ebr;
+            fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
+            while(fread(&ebr,sizeof(EBR),1,file)!=0 ){
+                if(strcmp(id.data(),ebr.part_name) == 0){
                     fclose(file);
-                    return extendedBoot.part_fit;
+                    return ebr.part_fit;
+                }
+                else if(ebr.part_next==-1){
+                    break;
+                }
+                else{
+                    fseek(file,ebr.part_next,SEEK_SET);
                 }
             }
+                
         }
         fclose(file);
     }
