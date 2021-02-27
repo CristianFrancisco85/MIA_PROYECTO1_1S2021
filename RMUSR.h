@@ -103,7 +103,7 @@ void RMUSR_::init(){
                             }
                         }
                         //Se parsea el contenido
-                        char auxContent[1000] = "\0";
+                        string auxContent;
                         char *endString;
                         char *lineToken = strtok_r(content,"\n",&endString);
                         
@@ -132,19 +132,23 @@ void RMUSR_::init(){
                                     }
                                 }
                             }                          
-                            strcat(auxContent,auxLine);
+                            auxContent+=auxLine;
                             lineToken = strtok_r(NULL,"\n",&endString);
                         }
 
                         //Se reescribe el users.txt
                         for(int i = 0; i < 12; i++){
                             if(inodo.i_block[i] != -1){
-                                BloqueArchivos archivo;
-                                for(int j = 0; j < 63; j++){
-                                    archivo.b_content[j]=auxContent[i*64+j];
-                                    fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
-                                    fwrite(&archivo,sizeof(BloqueArchivos),1,file);
+                                BloqueArchivos *archivo = new BloqueArchivos;
+                                string auxString = "";
+                                for(int j = 0; j <= 64; j++){
+                                    if(i*64+j<auxContent.size()&&(int)auxContent.at(i*64+j)!=1){
+                                        auxString += auxContent.at(i*64+j);  
+                                    }                       
                                 }
+                                strcpy(archivo->b_content,auxString.data());
+                                fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
+                                fwrite(archivo,sizeof(BloqueArchivos),1,file);
                             }
                         }
                         

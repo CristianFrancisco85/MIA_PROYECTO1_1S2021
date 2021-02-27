@@ -1050,7 +1050,7 @@ void REP_::reportBloque(){
         //Se elimina archivo de residuo
         comando = "sudo rm '";
         comando += auxPath2 + "\'";
-        system(comando.c_str());
+        //system(comando.c_str());
         this_thread::sleep_for(chrono::milliseconds(1000));
         cout<< "\u001B[32m" << "[OK] Reporte de Tabla de Bloques creado exitosamente"<< "\x1B[0m" << endl;
 

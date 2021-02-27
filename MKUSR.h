@@ -199,7 +199,7 @@ void MKUSR_::addDataToUsers(string newData){
         //Espacio Usado en el ultimo bloque 
         int used = strlen(archivo.b_content);
         //Espacio Libre en el blqoue
-        int free = 63 - used;
+        int free = 64 - used;
 
 
         if( newData.size() > free){
@@ -212,7 +212,7 @@ void MKUSR_::addDataToUsers(string newData){
                 aux += newData.at(i);
                 i++;
             }
-            while(i < size){
+            while(i < newData.size()){
                 aux2 += newData.at(i);
                 i++;
             }
@@ -224,27 +224,27 @@ void MKUSR_::addDataToUsers(string newData){
             //Se crea un bloque nuevo para escribir el faltante
             BloqueArchivos auxArchivo;
             strcpy(auxArchivo.b_content,aux2.data());
+
+            int bit = buscarBit(file,sesion.fit,'B');
             
-        
             //Se actualiza y escribe inodo
             inodo.i_size = inodo.i_size + newData.length();
-            inodo.i_mtime = time(nullptr);
-            int bit = buscarBit(file,sesion.fit,'B');
+            inodo.i_mtime = time(nullptr);  
             inodo.i_block[lastBlock] = bit;
             fseek(file,super.s_inode_start + sizeof(InodeTable),SEEK_SET);
             fwrite(&inodo,sizeof(InodeTable),1,file);
 
             //Se actualiza bitmap y se escribe nuevo bloques
-            fseek(file,super.s_block_start + (sizeof(BloqueArchivos)*bit),SEEK_SET);
-            fwrite(&auxArchivo,sizeof(BloqueArchivos),1,file);
             fseek(file,super.s_bm_block_start + bit,SEEK_SET);
             fputc('2',file);
+            fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bit,SEEK_SET);
+            fwrite(&auxArchivo,sizeof(BloqueArchivos),1,file);
 
             //Se actualiza cantidad de bloques e inodos disponibles
             super.s_first_blo = super.s_first_blo + 1;
             super.s_free_blocks_count = super.s_free_blocks_count - 1;
             fseek(file,sesion.superStart,SEEK_SET);
-            fwrite(&super,sizeof(SuperBloque),1,file);
+            fwrite(&super,sizeof(SuperBloque),1,file); 
             
 
         }
@@ -292,11 +292,11 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
     int freeBit = -1;
 
     if(fit == 'F'){
-        for(int i = inicioBitMap; i < sizeBitMap; i++){
+        for(int i = inicioBitMap; i < inicioBitMap+sizeBitMap; i++){
             fseek(file,i,SEEK_SET);
             auxBit = fgetc(file);
             if(auxBit == '0'){
-                return i;
+                return i-inicioBitMap;
             }
         }
         cout<<"Ya no hay bits disponibles";
@@ -308,7 +308,7 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
         int aux = 0;
         int aux2 = -1;
     
-        for(int i = inicioBitMap ; i < sizeBitMap; i++){
+        for(int i = inicioBitMap ; i < inicioBitMap+sizeBitMap; i++){
             fseek(file,i,SEEK_SET);
             auxBit = fgetc(file);
             if(auxBit == '1'||auxBit == '2'||auxBit == '3'){
@@ -326,7 +326,7 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
             }
             else if(auxBit == '0'){
                 bitsLibres++;
-                if(sizeBitMap == i+1){
+                if(inicioBitMap+sizeBitMap == i+1){
                     if(aux != 0 ){
                         if(bitsLibres > aux){
                             aux = bitsLibres;
@@ -342,14 +342,14 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
             }
         }
 
-        return aux2;
+        return aux2-inicioBitMap;
     }
     else if(fit == 'B'){
         int bitsLibres = 0;
         int aux = 0;
         int aux2 = -1;
     
-        for(int i = inicioBitMap ; i < sizeBitMap; i++){
+        for(int i = inicioBitMap ; i < inicioBitMap+sizeBitMap; i++){
             fseek(file,i,SEEK_SET);
             auxBit = fgetc(file);
             if(auxBit == '1'||auxBit == '2'||auxBit == '3'){
@@ -367,7 +367,7 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
             }
             else if(auxBit == '0'){
                 bitsLibres++;
-                if(sizeBitMap == i+1){
+                if(inicioBitMap+sizeBitMap == i+1){
                     if(aux != 0 ){
                         if(bitsLibres < aux){
                             aux = bitsLibres;
@@ -382,7 +382,7 @@ int MKUSR_::buscarBit(FILE *file,char fit,char tipo){
                 }
             }
         }
-        return aux2;
+        return aux2-inicioBitMap;
     }
     
 
