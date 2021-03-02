@@ -29,6 +29,11 @@ mkgrp -name="usuarios"
 mkgrp -name="usuarios2"
 mkgrp -name="usuarios3"
 
+rmgrp -name="usuarios2"
+mkusr -usr=user1 -pwd=usuario -grp=usuarios
+mkusr -usr=user2 -pwd=usrxd -grp=usuarios3
+rmusr -usr="user1"
+
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInode.jpg -name=inode
@@ -37,10 +42,9 @@ mkgrp -name="usuarios3"
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlockBM.txt -name=bm_block
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteSB.jpg -name=sb
 
-rmgrp -name="usuarios2"
-mkusr -usr=user1 -pwd=usuario -grp=usuarios
-mkusr -usr=user2 -pwd=usrxd -grp=usuarios3
-rmusr -usr="user1"
 
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInode.jpg -name=inode
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInode.jpg -name=inode
+

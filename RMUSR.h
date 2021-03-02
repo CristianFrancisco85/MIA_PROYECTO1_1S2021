@@ -261,7 +261,8 @@ void RMUSR_::guardarJournal(char* operacion,char *path,char *content){
         
         //Se busca ultimo registro
         while(ftell(file) < super.s_bm_inode_start){
-            if(fread(&registroAux,sizeof(Journal),1,file)==0){
+            fread(&registroAux,sizeof(Journal),1,file);
+            if(registroAux.content[0]=='\0'){
                 break;
             }
         }

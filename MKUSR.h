@@ -142,9 +142,9 @@ void MKUSR_::init(){
                         if(sesion.sistemaType == 3){
                             char content[64];
                             char operacion[10];
-                            char path[1];
                             strcpy(content,userStr.data());
                             strcpy(operacion,"mkusr");
+                            char path[1];
                             path[0]='-';
                             guardarJournal(operacion,path,content);
                         }
@@ -468,7 +468,8 @@ void MKUSR_::guardarJournal(char* operacion,char *path,char *content){
         
         //Se busca ultimo registro
         while(ftell(file) < super.s_bm_inode_start){
-            if(fread(&registroAux,sizeof(Journal),1,file)==0){
+            fread(&registroAux,sizeof(Journal),1,file);
+            if(registroAux.content[0]=='\0'){
                 break;
             }
         }

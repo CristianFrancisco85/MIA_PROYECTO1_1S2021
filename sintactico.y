@@ -110,6 +110,8 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> bm_block
 %token<STRING> bm_inode
 %token<STRING> sb
+%token<STRING> journaling
+%token<STRING> tree
 
 %token<STRING> _2fs
 %token<STRING> _3fs
@@ -278,7 +280,7 @@ PAUSE:
 ;
 
 REP: 
-    rep REPPARAMS{rep_->initRep();cout<<lineaGuiones<<endl;rep_ = new REP_();}
+    rep REPPARAMS{rep_->initRep();cout<<lineaGuiones<<endl;free(rep_);rep_ = new REP_();}
 ;
 
 REPPARAMS: 
@@ -298,6 +300,8 @@ REPPARAM:
     | guion name igual bm_inode {rep_->setName($4);}
     | guion name igual bm_block {rep_->setName($4);}
     | guion name igual sb {rep_->setName($4);}
+    | guion name igual journaling {rep_->setName($4);}
+    | guion name igual tree {rep_->setName($4);}
 ;
 
 MKFS: 

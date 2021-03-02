@@ -63,6 +63,8 @@ id ([a-zA-Z]|[0-9]|"_")*
 "bm_inode" {yylval.STRING = strdup(yytext);return (bm_inode);};
 "bm_block" {yylval.STRING = strdup(yytext);return (bm_block);};
 "sb" {yylval.STRING = strdup(yytext);return (sb);};
+"journaling" {yylval.STRING = strdup(yytext);return (journaling);};
+"tree" {yylval.STRING = strdup(yytext);return (tree);};
 
 "2fs" {yylval.STRING = strdup(yytext);return (_2fs);};
 "3fs" {yylval.STRING = strdup(yytext);return (_3fs);};
