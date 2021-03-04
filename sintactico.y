@@ -19,6 +19,7 @@
 #include <RMGRP.h>
 #include <MKUSR.h>
 #include <RMUSR.h>
+#include <MKFILE.h>
 #include <list>
 #include <structs.h>
 
@@ -45,6 +46,7 @@ MKGRP_* mkgrp_ = new MKGRP_();
 RMGRP_* rmgrp_ = new RMGRP_();
 MKUSR_* mkusr_ = new MKUSR_();
 RMUSR_* rmusr_ = new RMUSR_();
+MKFILE_* mkfile_ = new MKFILE_();
 
 bool loged = false;
 Sesion sesion;
@@ -101,6 +103,9 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> grp
 %token<STRING> mkusr
 %token<STRING> rmusr
+%token<STRING> mkfile
+%token<STRING> r
+%token<STRING> cont
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -164,6 +169,10 @@ string lineaGuiones="-----------------------------------------------------------
 
 %type<STRING> RMUSR
 
+%type<STRING> MKFILE
+%type<STRING> MKFILEPARAMS
+%type<STRING> MKFILEPARAM
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -198,6 +207,7 @@ INSTRUCCION:
     |RMGRP
     |MKUSR
     |RMUSR
+    |MKFILE
     |error{}
 ;
 
@@ -313,8 +323,8 @@ MKFSPARAMS:
     | MKFSPARAMS MKFSPARAM
 ;
 
-MKFSPARAM
-    : guion id_ igual id {mkfs_->setId($4);}
+MKFSPARAM: 
+    guion id_ igual id {mkfs_->setId($4);}
     | guion id_ igual cadena {mkfs_->setId($4);}
     | guion type igual full {mkfs_->setTypeFormat($4);}
     | guion type igual fast {mkfs_->setTypeFormat($4);}
@@ -377,6 +387,25 @@ MKUSRPARAM:
 RMUSR: 
     rmusr guion usr igual id {rmusr_->setUser($5);rmusr_->init();cout<<lineaGuiones<<endl;rmusr_ = new RMUSR_();}
     | rmusr guion usr igual cadena {rmusr_->setUser($5);rmusr_->init();cout<<lineaGuiones<<endl;rmusr_ = new RMUSR_();}
+;
+
+MKFILE:
+    mkfile MKFILEPARAMS {mkfile_->init();cout<<lineaGuiones<<endl; mkfile_ = new MKFILE_();}
+;
+
+MKFILEPARAMS:
+    MKFILEPARAM MKFILEPARAMS
+    | MKFILEPARAM
+;
+
+MKFILEPARAM:
+    guion r {mkfile_->setRParam();}
+    | guion path igual ruta {mkfile_->setPath($4);}
+    | guion path igual cadena {mkfile_->setPath($4);}
+    | guion size igual numero {mkfile_->setSize($4);}
+    | guion cont igual ruta {mkfile_->setPath($4);}
+    | guion cont igual cadena {mkfile_->setPath($4);}
+
 ;
 
 

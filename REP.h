@@ -1713,7 +1713,9 @@ void REP_::reportTree(){
                     dotCode += to_string(linkInt)+"</td><td PORT=\"f"+to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td></tr>\n";
                     linkInt++;
                 }
-                dotCode += "<tr><td> i_type </td><td> "+to_string(inodo.i_type)+" </td></tr>\n";
+                dotCode += "<tr><td> i_type </td><td> ";
+                dotCode += inodo.i_type;
+                dotCode += " </td></tr>\n";
                 dotCode += "<tr><td> i_perm </td><td> "+to_string(inodo.i_perm)+" </td></tr>\n";
                 dotCode += "</table>>]\n";
 
@@ -1879,7 +1881,7 @@ void REP_::reportTree(){
         //Se elimina archivo de residuo
         comando = "sudo rm '";
         comando += auxPath2 + "\'";
-        //system(comando.c_str());
+        system(comando.c_str());
         this_thread::sleep_for(chrono::milliseconds(1000));
         cout<< "\u001B[32m" << "[OK] Reporte de Arbol creado exitosamente"<< "\x1B[0m" << endl;
     
@@ -2032,3 +2034,4 @@ void REP_::reportJournaling(){
         cout<< "\u001B[32m" << "[OK] Reporte de Journaling creado exitosamente"<< "\x1B[0m" << endl;
     }
 }
+

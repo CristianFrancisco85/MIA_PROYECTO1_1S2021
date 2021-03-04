@@ -1,7 +1,7 @@
 #exec -path=/home/cristian/Desktop/Panel/MIA_Proyecto1/pruebas.txt
 
 #Se crea Disco 1,2,3
-mkdisk -size=2 -u=m -f=bf -path=/home/cristian/PruebAsMIA/Disco1.dk
+mkdisk -size=5 -u=m -f=bf -path=/home/cristian/PruebAsMIA/Disco1.dk
 mkdisk -size=2000 -u=k -path=/home/cristian/PruebAsMIA/Disco2.dk
 
 #Se elimina disco 2
@@ -33,6 +33,7 @@ rmgrp -name="usuarios2"
 mkusr -usr=user1 -pwd=usuario -grp=usuarios
 mkusr -usr=user2 -pwd=usrxd -grp=usuarios3
 rmusr -usr="user1"
+mkfile -size= 85 -path=/prueba.txt
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk
@@ -43,8 +44,9 @@ rmusr -usr="user1"
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteSB.jpg -name=sb
 
 
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
+#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=inode
+#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
+#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteInode.jpg -name=inode
+
 

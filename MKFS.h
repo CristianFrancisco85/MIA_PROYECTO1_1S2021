@@ -262,14 +262,14 @@ void MKFS_::formatExt3(int partIndex,MOUNT_ *aux){
     fwrite(&inodo,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta Root
-    strcpy(bloque.b_content[0].b_name ,"-");
-    bloque.b_content[0].b_inodo= 0;
+    strcpy(bloque.b_content[0].b_name ,"users.txt");
+    bloque.b_content[0].b_inodo= 1;
     strcpy(bloque.b_content[1].b_name, "-");
-    bloque.b_content[1].b_inodo = 0;
-    strcpy(bloque.b_content[2].b_name, "users.txt");
-    bloque.b_content[2].b_inodo = 1;
+    bloque.b_content[1].b_inodo = -1;
+    strcpy(bloque.b_content[2].b_name, "-");
+    bloque.b_content[2].b_inodo = -1;
     strcpy(bloque.b_content[3].b_name, "-");
-    bloque.b_content[3].b_inodo = 1;
+    bloque.b_content[3].b_inodo = -1;
 
     //Se escribe el bloque
     fseek(file,super.s_block_start,SEEK_SET);
@@ -422,14 +422,14 @@ void MKFS_::formatExt2(int partIndex,MOUNT_ *aux){
     fwrite(&inode,sizeof (InodeTable),1,file);
 
     //Configurando Bloque para carpeta Root
-    strcpy(bloque.b_content[0].b_name ,"-");
-    bloque.b_content[0].b_inodo= 0;
+    strcpy(bloque.b_content[0].b_name ,"users.txt");
+    bloque.b_content[0].b_inodo= 1;
     strcpy(bloque.b_content[1].b_name, "-");
-    bloque.b_content[1].b_inodo = 0;
-    strcpy(bloque.b_content[2].b_name, "users.txt");
-    bloque.b_content[2].b_inodo = 1;
+    bloque.b_content[1].b_inodo = -1;
+    strcpy(bloque.b_content[2].b_name, "-");
+    bloque.b_content[2].b_inodo = -1;
     strcpy(bloque.b_content[3].b_name, "-");
-    bloque.b_content[3].b_inodo = 1;
+    bloque.b_content[3].b_inodo = -1;
 
     //Se escribe el bloque
     fseek(file,super.s_block_start,SEEK_SET);

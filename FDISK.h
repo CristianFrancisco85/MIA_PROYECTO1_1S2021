@@ -245,7 +245,7 @@ void FDISK_::setStatus(){
     else if(strcmp(this->operationType.c_str(),"delete") ==0){
         
     }
-    else if(strcmp(this->operationType.c_str(),"create") ==0){
+    else if(strcmp(this->operationType.c_str(),"add") ==0){
         if(size==0){
             cout<< "\u001B[31m" << "[BAD PARAM] Size no puede ser 0"<< "\x1B[0m" << endl;
             return;
@@ -824,7 +824,290 @@ bool FDISK_::partitionExist(char* name){
 }
 
 void FDISK_::addToPartition(){
-    //SE COMPRUEBA EL ESPACIO USADO EN EL DISCO?
+
+    add = add * getUnit();
+
+    FILE *file = fopen(path, "rb+");
+    if(file!=NULL){
+
+        MBR master;
+        fseek(file,0,SEEK_SET);
+        fread(&master,sizeof(MBR),1,file);
+
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
+        int partIndex = -1;
+        int extendedIndex = -1;
+        bool flagExtendida = false;
+        //Se busca el indice de la particion
+        for(int i = 0; i < 4; i++){
+
+            if(mbr_partitions[i]->part_type == 'E'){
+                flagExtendida = true;
+                extendedIndex = i;
+            }
+            if((strcmp(mbr_partitions[i]->part_name, name)) == 0){
+                partIndex = i;
+                
+                break;
+            }
+            
+
+        }
+        if(partIndex != -1){
+
+            if(!flagExtendida){
+
+                //SE AGREGA ESPACIO
+               if(add>0){
+                    
+                    if(partIndex==3){
+
+                        int aux = mbr_partitions[partIndex]->part_start + mbr_partitions[partIndex]->part_size;
+                        int total = master.mbr_tamano + (int)sizeof(MBR);
+                        int fragmentacion = total - aux;
+                        if(fragmentacion != 0){
+                            
+                            if(fragmentacion >= add){
+                                mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                fseek(file,0,SEEK_SET);
+                                fwrite(&master,sizeof(MBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }
+                        }
+                        else{
+                            cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                        }
+                        
+                    }
+                    else{
+
+                        int aux1 = mbr_partitions[partIndex]->part_start + mbr_partitions[partIndex]->part_size;
+                        int aux2 = mbr_partitions[partIndex+1]->part_start;
+                        int fragmentacion = aux2-aux1;
+                        if(fragmentacion == 0){
+
+                            if(mbr_partitions[partIndex + 1]->part_status == '1'){
+
+                                if(mbr_partitions[partIndex + 1]->part_size >= add){
+                                    
+                                    mbr_partitions[partIndex + 1]->part_size = mbr_partitions[partIndex + 1]->part_size - add;
+                                    mbr_partitions[partIndex + 1]->part_start = mbr_partitions[partIndex + 1]->part_start + add;
+                                    mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                    
+                                    fseek(file,0,SEEK_SET);
+                                    fwrite(&master,sizeof(MBR),1,file);
+                                    cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                                }
+                                else{
+                                    cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                                }
+                            }
+                        }
+                        else{
+                            if(fragmentacion >= add){
+                                mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                fseek(file,0,SEEK_SET);
+                                fwrite(&master,sizeof(MBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }   
+                        }
+                        
+                    }
+                }
+                //SE QUITA ESPACIO
+                else{
+                    add=add*-1;
+                    if(add < mbr_partitions[partIndex]->part_size){
+                        mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size - add;
+                        fseek(file,0,SEEK_SET);
+                        fwrite(&master,sizeof(MBR),1,file);
+                        cout<< "\u001B[32m" << "[OK] Espacio reducido exitosamente a la particion "<< "\x1B[0m" << endl;
+                    }
+                    else{
+                        cout<< "\u001B[31m" << "[BAD PARAM] No se puede reducir la particion mas alla de su tamaño actual "<< "\x1B[0m" << endl;
+                    }
+                }
+            }
+            else{
+                //SE AGREGA ESPACIO
+                if(add>0){
+                    
+                    if(partIndex==3){
+
+                        int aux = mbr_partitions[partIndex]->part_start + mbr_partitions[partIndex]->part_size;
+                        int total = master.mbr_tamano + (int)sizeof(MBR);
+                        int fragmentacion = total - aux;
+                        if(fragmentacion != 0){
+                            
+                            if(fragmentacion >= add){
+                                mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                fseek(file,0,SEEK_SET);
+                                fwrite(&master,sizeof(MBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }
+                        }
+                        else{
+                            cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                        }
+                        
+                    }
+                    else{
+
+                        int aux1 = mbr_partitions[partIndex]->part_start + mbr_partitions[partIndex]->part_size;
+                        int aux2 = mbr_partitions[partIndex+1]->part_start;
+                        int fragmentacion = aux2-aux1;
+                        if(fragmentacion == 0){
+
+                            if(mbr_partitions[partIndex + 1]->part_status == '1'){
+
+                                if(mbr_partitions[partIndex + 1]->part_size >= add){
+                                    
+                                    mbr_partitions[partIndex + 1]->part_size = mbr_partitions[partIndex + 1]->part_size - add;
+                                    mbr_partitions[partIndex + 1]->part_start = mbr_partitions[partIndex + 1]->part_start + add;
+                                    mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                    
+                                    fseek(file,0,SEEK_SET);
+                                    fwrite(&master,sizeof(MBR),1,file);
+                                    cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                                }
+                                else{
+                                    cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                                }
+                            }
+                        }
+                        else{
+                            if(fragmentacion >= add){
+                                mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size + add;
+                                fseek(file,0,SEEK_SET);
+                                fwrite(&master,sizeof(MBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }   
+                        }
+                        
+                    }
+                }
+                //SE QUITA ESPACIO
+                else{
+                    add = add * -1;
+                    if(add < mbr_partitions[partIndex]->part_size){
+                        EBR ebr;
+                        fseek(file, mbr_partitions[partIndex]->part_start,SEEK_SET);
+                        fread(&ebr,sizeof(EBR),1,file);
+                        while(ebr.part_next != -1){
+                            fseek(file,ebr.part_next,SEEK_SET);
+                            fread(&ebr,sizeof(EBR),1,file);
+                        }
+                        int aux = mbr_partitions[partIndex]->part_start + mbr_partitions[partIndex]->part_size - add;
+                        if(aux > ebr.part_start+ebr.part_size){
+                            mbr_partitions[partIndex]->part_size = mbr_partitions[partIndex]->part_size - add;
+                            fseek(file,0,SEEK_SET);
+                            fwrite(&master,sizeof(MBR),1,file);
+                            cout<< "\u001B[32m" << "[OK] Espacio reducido exitosamente a la particion "<< "\x1B[0m" << endl;
+                        }
+                        else{
+                            cout<< "\u001B[31m" << "[BAD PARAM] No se puede reducir la particion ya que hay particiones logicas usando el espacio"<< "\x1B[0m" << endl;
+                        }
+                        
+                    }
+                    else{
+                        cout<< "\u001B[31m" << "[BAD PARAM] No se puede reducir la particion mas alla de su tamaño actual "<< "\x1B[0m" << endl;
+                    }
+                }
+            }
+        }
+        else{
+            if(extendedIndex!=-1){      
+                int logicIndex = -1;
+                //Se lee Extended Boot Record
+                EBR ebr;
+                fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
+                //se busca la particion logica
+                while(logicIndex==-1){
+                    fread(&ebr,sizeof(EBR),1,file);
+                    if(strcmp(this->name,ebr.part_name) == 0){
+                        logicIndex= ftell(file) - sizeof(EBR);
+                        break;
+                    }
+                    else if(ebr.part_next == -1){
+                        break;
+                    }
+                    else {
+                        fseek(file,ebr.part_next,SEEK_SET);
+                    }
+                }
+                
+                if(logicIndex != -1){
+
+
+                    if(add>0){
+                        if(ebr.part_next != -1 ){
+
+                            if(ebr.part_start+ebr.part_size+add < ebr.part_next){
+                                ebr.part_size = ebr.part_size + add;
+                                fseek(file,logicIndex,SEEK_SET);
+                                fwrite(&ebr,sizeof(EBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }   
+
+                        }
+                        else{
+                            if(ebr.part_start+ebr.part_size+add < mbr_partitions[extendedIndex]->part_start+mbr_partitions[extendedIndex]->part_size){
+                                ebr.part_size = ebr.part_size + add;
+                                fseek(file,logicIndex,SEEK_SET);
+                                fwrite(&ebr,sizeof(EBR),1,file);
+                                cout<< "\u001B[32m" << "[OK] Espacio agregado exitosamente a la particion "<< "\x1B[0m" << endl;
+                            }
+                            else{
+                                cout<< "\u001B[31m" << "[BAD PARAM] Espacio insuficiente para agregar espacio a la particion "<< "\x1B[0m" << endl;
+                            }
+                        }
+                    }
+                    else{
+                        add=add*-1;
+                        if(add < ebr.part_size){
+                            ebr.part_size = ebr.part_size - add;
+                            fseek(file,logicIndex,SEEK_SET);
+                            fwrite(&ebr,sizeof(EBR),1,file);
+                            cout<< "\u001B[32m" << "[OK] Espacio reducido exitosamente a la particion "<< "\x1B[0m" << endl;
+                        }
+                        else{
+                            cout<< "\u001B[31m" << "[BAD PARAM] No se puede reducir la particion mas alla de su tamaño actual "<< "\x1B[0m" << endl;
+                        }
+                    }
+                }
+                else{
+                    cout<< "\u001B[31m" << "[BAD PARAM] No se encontro una particion con el nombre indicado"<< "\x1B[0m" << endl;
+                }
+            }
+            else{
+                cout<< "\u001B[31m" << "[BAD PARAM] No se encontro una particion con el nombre indicado"<< "\x1B[0m" << endl;   
+            }
+        }
+        fclose(file);
+    }
+    else{
+        cout<< "\u001B[31m" << "[BAD PARAM] No se encontro el disco con esa direccion"<< "\x1B[0m" << endl;
+    }
 }
 
 void FDISK_::deletePartition(){

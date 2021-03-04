@@ -77,6 +77,10 @@ id ([a-zA-Z]|[0-9]|"_")*
 "grp" {yylval.STRING = strdup(yytext);return (grp);};
 "mkusr" {yylval.STRING = strdup(yytext);return (mkusr);};
 "rmusr" {yylval.STRING = strdup(yytext);return (rmusr);};
+"mkfile" {yylval.STRING = strdup(yytext);return (mkfile);};
+"r" {yylval.STRING = strdup(yytext);return (r);};
+"cont" {yylval.STRING = strdup(yytext);return (cont);};
+
 
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};

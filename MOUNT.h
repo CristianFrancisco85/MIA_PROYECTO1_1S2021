@@ -24,9 +24,6 @@ private:
     int number;//Numero de particion por disco
     bool statusFlag;// Indica si ha errores con el comando.
 public:
-    /**
-     * Constructor
-    */
     MOUNT_(){
         this->path="";
         this->name="";
@@ -100,7 +97,6 @@ public:
      * Busca una particion primaria y regresa su indice
     */
     int findPartitionIndex();
-
 
     /**
      * Busca una particion logica y regresa su indice
@@ -303,8 +299,9 @@ int MOUNT_::findLogicPartitionStart(){
 
                 if(strcmp(this->getName().c_str(),ebr.part_name) == 0){
                     //Retorna el inicio del EBR de la particion logica encontrada
+                    int aux= ftell(file);
                     fclose(file);
-                    return (ebr.part_start - sizeof(EBR));
+                    return (aux - sizeof(EBR));
                 }
                 //Si ya no hay una EBR que le siga
                 if(ebr.part_next == -1){
