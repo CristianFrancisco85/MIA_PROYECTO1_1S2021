@@ -1,7 +1,7 @@
 #ifndef MKFILE_H
 #define MKFILE_H
 
-#endif // MKFS_H
+#endif // MKFILE_H
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
@@ -124,6 +124,15 @@ public:
     */
     returnType nuevaCarpeta(FILE *file, char *tempPath, int index);
 
+    /**
+     *Guarda una operacion en el Journal 
+     * @param operacion: Nombre de la operacion
+     * @param path: Path de la operacion
+     * @param content: Data para operaciones en users.txt o mkfile int
+     */
+    void guardarJournal(char *operacion, char *path, char *content);
+
+
 };
 
 void MKFILE_::setPath(char *value){
@@ -166,7 +175,7 @@ void MKFILE_::init (){
     setStatus();
     if(this->statusFlag){
         if(loged){
-            
+
             FILE *file = fopen(sesion.direccion.c_str(),"rb+");
             int res = -1;
 
@@ -190,6 +199,21 @@ void MKFILE_::init (){
 
                     case fileCreated:
                         cout<< "\u001B[32m" << "[OK] El archivo se ha creado exitosamente"<< "\x1B[0m" <<endl;
+                        if(sesion.sistemaType == 3){
+                            char operacion[10];
+                            char pathChar[500];
+                            char content[500];
+                            strcpy(operacion,"mkfile");
+                            strcpy(pathChar,this->path.c_str());
+                            if(this->cont.length() != 0){
+                                strcpy(content,this->cont.c_str());
+                                guardarJournal(operacion,pathChar,content);
+                            }
+                            else{
+                                strcpy(content,to_string(this->size).c_str());
+                                guardarJournal(operacion,pathChar,content);
+                            }
+                        }
                         break;
                     case badPermissions:
                         cout<< "\u001B[31m" << "[BAD CONTEXT] No cuenta con los permisos de escritura necesarios"<< "\x1B[0m" <<endl;
@@ -2203,3 +2227,44 @@ returnType MKFILE_::nuevaCarpeta(FILE *file, char *tempPath, int index){
     
 }
 
+void MKFILE_::guardarJournal(char* operacion,char *path,char *content){
+    
+    
+    FILE *file = fopen(sesion.direccion.data(),"r+b");
+
+    if(file!=NULL){
+        Journal registro;
+        Journal registroAux;
+        
+        //Se configura el registro
+        registro.user = sesion.user;
+        strcpy(registro.operationType,operacion);
+        strcpy(registro.path,path);
+        strcpy(registro.content,content);
+        registro.date = time(nullptr);
+        
+        //Se lee superbloque
+        SuperBloque super;
+        fseek(file,sesion.superStart,SEEK_SET);
+        fread(&super,sizeof(SuperBloque),1,file);
+        //Se posiciona al principio del journal
+        fseek(file,sesion.superStart + sizeof(SuperBloque),SEEK_SET);
+        
+        //Se busca ultimo registro
+        while(ftell(file) < super.s_bm_inode_start){
+            fread(&registroAux,sizeof(Journal),1,file);
+            if(registroAux.content[0]=='\0'){
+                break;
+            }
+        }
+        //Se escribe el registro
+        fseek(file,ftell(file)-sizeof(Journal),SEEK_SET);
+        fwrite(&registro,sizeof(Journal),1,file);
+        fclose(file);
+    }
+    else{
+
+    }
+
+    
+}

@@ -104,6 +104,9 @@ void MKGRP_::init(){
                     if(sesion.sistemaType == 3){
                         char content[64];
                         char operacion[10];
+                        for(int j=0;j<10;j++){
+                            operacion[j]='\0';
+                        }
                         char *nameC = new char[name.length() + 1];
                         strcpy(content,grupoStr.data());
                         strcpy(operacion,"mkgrp");

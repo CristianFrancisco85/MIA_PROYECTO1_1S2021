@@ -1,7 +1,7 @@
 #ifndef MKUSR_H
 #define MKUSR_H
 
-#endif // MKGRP_H
+#endif // MKUSR_H
 
 #include <iostream>
 #include <string.h>
@@ -144,8 +144,10 @@ void MKUSR_::init(){
                             char operacion[10];
                             strcpy(content,userStr.data());
                             strcpy(operacion,"mkusr");
-                            char path[1];
-                            path[0]='-';
+                            char path[10];
+                            for(int j=0;j<10;j++){
+                                path[j]='\0';
+                            }
                             guardarJournal(operacion,path,content);
                         }
                     }

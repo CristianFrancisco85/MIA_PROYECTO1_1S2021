@@ -36,7 +36,7 @@ rmusr -usr="user1"
 
 mkfile -size=50 -path=/home/usac/prueba.txt -r
 mkfile -size=50 -path=/home/usac/prueba2.txt 
-mkfile -size=50 -path=/home/usac/prueba2.txt 
+mkdir -path=/home/etc/xd -p
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk
@@ -49,7 +49,7 @@ mkfile -size=50 -path=/home/usac/prueba2.txt
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=inode
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
-#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
 
 

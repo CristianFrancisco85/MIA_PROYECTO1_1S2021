@@ -33,8 +33,8 @@ void parse(){
     while(true){
 
         string inputCommand;
-        std::cout << "\u001B[36m" << "[INPUT] :" << "\x1B[0m";
-        std::getline(std::cin, inputCommand);
+        cout << "\u001B[36m" << "[INPUT] :" << "\x1B[0m";
+        getline(cin, inputCommand);
 
         if(inputCommand == "clear"){
             system("clear");

@@ -155,10 +155,12 @@ void RMGRP_::init(){
                         if(sesion.sistemaType == 3){
                             char content[64];
                             char operacion[10];
-                            char path[1];
+                            char path[10];
+                            for(int j=0;j<10;j++){
+                                path[j]='\0';
+                            }
                             strcpy(content,name.data());
                             strcpy(operacion,"rmgrp");
-                            path[0]='-';
                             guardarJournal(operacion,path,content);
                         }
 

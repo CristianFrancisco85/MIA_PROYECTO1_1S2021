@@ -20,6 +20,7 @@
 #include <MKUSR.h>
 #include <RMUSR.h>
 #include <MKFILE.h>
+#include <MKDIR.h>
 #include <list>
 #include <structs.h>
 
@@ -47,6 +48,7 @@ RMGRP_* rmgrp_ = new RMGRP_();
 MKUSR_* mkusr_ = new MKUSR_();
 RMUSR_* rmusr_ = new RMUSR_();
 MKFILE_* mkfile_ = new MKFILE_();
+MKDIR_* mkdir_= new MKDIR_();
 
 bool loged = false;
 Sesion sesion;
@@ -106,6 +108,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> mkfile
 %token<STRING> r
 %token<STRING> cont
+%token<STRING> mkdir
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -173,6 +176,10 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MKFILEPARAMS
 %type<STRING> MKFILEPARAM
 
+%type<STRING> MKDIR
+%type<STRING> MKDIRPARAMS
+%type<STRING> MKDIRPARAM
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -208,6 +215,7 @@ INSTRUCCION:
     |MKUSR
     |RMUSR
     |MKFILE
+    |MKDIR
     |error{}
 ;
 
@@ -408,6 +416,20 @@ MKFILEPARAM:
 
 ;
 
+MKDIR:
+    mkdir MKDIRPARAMS {mkdir_->init();cout<<lineaGuiones<<endl; mkdir_ = new MKDIR_();}
+;
+
+MKDIRPARAMS:
+    MKDIRPARAM MKDIRPARAMS
+    | MKDIRPARAM
+;
+
+MKDIRPARAM:
+    guion p {mkdir_->setPParam();}
+    | guion path igual ruta {mkdir_->setPath($4);}
+    | guion path igual cadena {mkdir_->setPath($4);}
+;
 
 %%
 
