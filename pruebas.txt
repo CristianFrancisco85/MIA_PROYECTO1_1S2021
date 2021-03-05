@@ -33,7 +33,10 @@ rmgrp -name="usuarios2"
 mkusr -usr=user1 -pwd=usuario -grp=usuarios
 mkusr -usr=user2 -pwd=usrxd -grp=usuarios3
 rmusr -usr="user1"
-mkfile -size= 85 -path=/prueba.txt
+
+mkfile -size=50 -path=/home/usac/prueba.txt -r
+mkfile -size=50 -path=/home/usac/prueba2.txt 
+mkfile -size=50 -path=/home/usac/prueba2.txt 
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteDisk.jpg -name=disk

@@ -1710,7 +1710,7 @@ void REP_::reportTree(){
                 for(int j = 0; j < 15; j++){
                     //AQUI
                     dotCode += "<tr><td> i_block_";
-                    dotCode += to_string(linkInt)+"</td><td PORT=\"f"+to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td></tr>\n";
+                    dotCode += to_string(linkInt)+"</td><td port=\"f"+to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td></tr>\n";
                     linkInt++;
                 }
                 dotCode += "<tr><td> i_type </td><td> ";
@@ -1743,9 +1743,10 @@ void REP_::reportTree(){
                             dotCode += "</table>>]\n";
                             for(int m = 0; m < 4; m++){
                                 if(carpetasBlock.b_content[m].b_inodo !=-1){
-                                    if(strcmp(carpetasBlock.b_content[m].b_name,"-")!=0){
+                                    if(strcmp(carpetasBlock.b_content[m].b_name,".")!=0 && strcmp(carpetasBlock.b_content[m].b_name,"..")!=0){
                                         //AQUI
-                                        dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(m)+" -> inodo_"+to_string(carpetasBlock.b_content[m].b_inodo)+";\n";
+                                        dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(m);
+                                        dotCode += " -> inodo_"+to_string(carpetasBlock.b_content[m].b_inodo)+";\n";
                                     }
                                 }
                             }
@@ -1769,7 +1770,7 @@ void REP_::reportTree(){
                             dotCode += "<tr><td bgcolor=\"gold\" ><b>Bloque de Apuntadores "+to_string(inodo.i_block[j])+"</b></td></tr>\n";
                             for(int m = 0; m < 16; m++){
                                 //AQUI
-                                dotCode += "<tr><tdport=\"f"+to_string(linkInt)+"\">"+to_string(apuntadoresBlock.b_pointers[m])+"</td></tr>\n";
+                                dotCode += "<tr><td port=\"f"+to_string(linkInt)+"\">"+to_string(apuntadoresBlock.b_pointers[m])+"</td></tr>\n";
                                 linkInt++;
                             }
                             dotCode += "</table>>]\n";
@@ -1797,7 +1798,8 @@ void REP_::reportTree(){
                                             if(carpetasBlock.b_content[n].b_inodo !=-1){
                                                 if(strcmp(carpetasBlock.b_content[n].b_name,"-")!=0){
                                                     //AQUI
-                                                    dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m])+":f"+to_string(n)+" -> inodo_"+to_string(carpetasBlock.b_content[n].b_inodo)+";\n";
+                                                    dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m])+":f"+to_string(n);
+                                                    dotCode += " -> inodo_"+to_string(carpetasBlock.b_content[n].b_inodo)+";\n";
                                                 }
                                             }
                                         }
@@ -1807,7 +1809,7 @@ void REP_::reportTree(){
                                         fread(&archivosBlock,sizeof(BloqueArchivos),1,file);
                                         dotCode += " bloque_"+to_string(apuntadoresBlock.b_pointers[m])+" [shape=plaintext label=<\n";
                                         dotCode += "<table border='0' cellborder='1'>\n";
-                                        dotCode += "<tr><td bgcolor=\"orangeg\"><b>Bloque de Archivos "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td></tr>\n";
+                                        dotCode += "<tr><td bgcolor=\"orange\"><b>Bloque de Archivos "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td></tr>\n";
                                         dotCode += "<tr><td> ";
                                         dotCode += archivosBlock.b_content;
                                         dotCode += " </td></tr>\n";
@@ -1819,13 +1821,15 @@ void REP_::reportTree(){
                             for(int b = 0; b < 16; b++){
                                 if(apuntadoresBlock.b_pointers[b] != -1){
                                     //AQUI
-                                    dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(b)+" -> bloque_"+to_string(apuntadoresBlock.b_pointers[b])+";\n";
+                                    dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(b);
+                                    dotCode += " -> bloque_"+to_string(apuntadoresBlock.b_pointers[b])+";\n";
                                 }
                                     
                             }
                         }
                         //AQUI
-                        dotCode += "inodo_"+to_string(i)+":f"+to_string(j)+" -> bloque_"+to_string(inodo.i_block[j])+"; \n";
+                        dotCode += "inodo_"+to_string(i)+":f"+to_string(j);
+                        dotCode += " -> bloque_"+to_string(inodo.i_block[j])+"; \n";
                     }
                 }
             }
@@ -1881,7 +1885,7 @@ void REP_::reportTree(){
         //Se elimina archivo de residuo
         comando = "sudo rm '";
         comando += auxPath2 + "\'";
-        system(comando.c_str());
+        //system(comando.c_str());
         this_thread::sleep_for(chrono::milliseconds(1000));
         cout<< "\u001B[32m" << "[OK] Reporte de Arbol creado exitosamente"<< "\x1B[0m" << endl;
     
