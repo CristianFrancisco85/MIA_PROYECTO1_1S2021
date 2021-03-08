@@ -74,11 +74,6 @@ public:
     char* getRuta();
 
     /**
-     *Configura ruta del disco
-    */
-    void configDiskPath();
-
-    /**
      * Inicia la ejecucion del comando
     */
     void initRep();
@@ -249,7 +244,12 @@ void REP_::initRep(){
     }
 }
 
-void REP_::configDiskPath(){
+
+
+//Metodos de reportes
+
+void REP_::reportMBR(){
+
     //Se busca particion y su ruta
     list<MOUNT_>::iterator i;
     for(i=mounted->begin(); i != mounted->end(); i++){
@@ -260,12 +260,7 @@ void REP_::configDiskPath(){
             break;
         }
     }
-}
 
-//Metodos de reportes
-
-void REP_::reportMBR(){
-    this->configDiskPath();
     string diskPath = this->getRuta();
     FILE *file;
     file=fopen(diskPath.c_str(),"rb+");
@@ -276,7 +271,8 @@ void REP_::reportMBR(){
         dotCode+= "shape=none;label=<\n";
         dotCode+= "<TABLE width='600' height= '1000' cellspacing='-1' cellborder='1'>\n";
         dotCode+= "<tr>\n";
-        dotCode+= "<td width='300'>Nombre</td><td width='300'>Valor</td></tr>";
+        dotCode+= "<td width='300'>Nombre</td><td width='300'>Valor</td>";
+        dotCode +="</tr>";
         
         //Se lee el MBR
         MBR master;
@@ -322,28 +318,28 @@ void REP_::reportMBR(){
         int extIndex = -1;
         //Se recorren particiones y se escriben sus datos
         for (int i = 0; i < 4; i++){
-            if(mbr_partitions[i]->part_status!='1' && mbr_partitions[i]->part_start!=-1){
-                if(mbr_partitions[i]->part_type == 'E'){
-                    extIndex = i;
-                }
-
+            if(mbr_partitions[i]->part_start!=-1 && mbr_partitions[i]->part_status!='1'){
+                
                 //Se escribe Status
                 dotCode += "<tr>";
                 dotCode += "<td>part_status_"+to_string(i+1)+"</td><td>";
                 dotCode += mbr_partitions[i]->part_status;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 //Se escribe Type
                 dotCode += "<tr>";
                 dotCode += "<td>part_type_"+to_string(i+1)+"</td><td>";
                 dotCode += mbr_partitions[i]->part_type;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 //Se escribe Fit
                 dotCode += "<tr>";
                 dotCode += "<td>part_fit_"+to_string(i+1)+"</td><td>";
                 dotCode += mbr_partitions[i]->part_fit;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 //Se escribe Start
                 dotCode += "<tr>";
@@ -362,7 +358,12 @@ void REP_::reportMBR(){
                 dotCode += "<td>part_name_"+to_string(i+1)+"</td>";
                 dotCode += "<td>";
                 dotCode += mbr_partitions[i]->part_name;
-                dotCode += "</td> </tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
+
+                if(mbr_partitions[i]->part_type == 'E'){
+                    extIndex = i;
+                }
 
             }
         }
@@ -371,31 +372,35 @@ void REP_::reportMBR(){
 
         //Si hay EBR para graficar
         if(extIndex != -1){
-            int ebrIndex = 1;
             EBR ebr;
             fseek(file,mbr_partitions[extIndex]->part_start,SEEK_SET);
             //Se leen todos los EBR y se grafica
+            int ebrIndex = 1;
             while(fread(&ebr,sizeof(EBR),1,file)!=0) {
 
                 if(ebr.part_status != '1'){
-                    dotCode+= "subgraph cluster_"+to_string(ebrIndex)+"{\n";
-                    dotCode+= "label=\"EBR_"+to_string(ebrIndex)+"\"\n";
+
+                    dotCode+= "subgraph cluster_"+to_string(ebrIndex)+"{\n label=\"EBR_"+to_string(ebrIndex)+"\"\n ";
                     dotCode+= "table_"+to_string(ebrIndex)+"[shape=box, label=<\n ";
                     
-                    dotCode+= "<TABLE width='400' height='200' cellspacing='-1' cellborder='1' >\n";
-                    dotCode+= "<tr><td width='200'>Nombre</td><td width='200'>Valor</td></tr>\n";
+                    dotCode += "<TABLE width='400' height='200' cellspacing='-1' cellborder='1'>\n";
+                    dotCode += "<tr>";
+                    dotCode +="<td width='200'>Nombre</td><td width='200'>Valor</td>";
+                    dotCode +="</tr>\n";
 
                     //Se escribe Status
                     dotCode += "<tr>";
                     dotCode += "<td>part_status_1</td><td>";
                     dotCode += +ebr.part_status;
-                    dotCode += "</td></tr>\n";
+                    dotCode += "</td>";
+                    dotCode += "</tr>\n";
 
                     //Se escribe Fit
                     dotCode += "<tr>";
                     dotCode += "<td>part_fit_1</td><td>";
                     dotCode += ebr.part_fit;
-                    dotCode += "</td></tr>\n";
+                    dotCode += "</td>";
+                    dotCode += "</tr>\n";
 
                     //Se escribe Start
                     dotCode += "<tr>";
@@ -426,11 +431,11 @@ void REP_::reportMBR(){
 
                     ebrIndex++;
                 }
-                if(ebr.part_next == -1){
-                    break;
+                if(ebr.part_next != -1){
+                    fseek(file,ebr.part_next,SEEK_SET);;
                 }
                 else{
-                    fseek(file,ebr.part_next,SEEK_SET);
+                    break;                   
                 }
             }
         }
@@ -496,7 +501,16 @@ void REP_::reportMBR(){
 }
 
 void REP_::reportDisk(){
-    this->configDiskPath();
+    //Se busca particion y su ruta
+    list<MOUNT_>::iterator i;
+    for(i=mounted->begin(); i != mounted->end(); i++){
+        if(i->getId() == this->id){
+            char aux[255];
+            strcpy(aux,i->getPath().c_str());
+            this->ruta =aux;
+            break;
+        }
+    }
     string diskPath = this->getRuta();
     FILE *file;
     if((file = fopen(diskPath.c_str(),"r"))){
@@ -551,7 +565,10 @@ void REP_::reportDisk(){
                     else{    
                         dotCode+= "<td height='200' width='100'>\n";
                         dotCode+= "<TABLE border='0'  height='180' width='100' cellborder='1'>\n";
-                        dotCode+= "<tr>  <td height='60' colspan='15'>Extendida</td>  </tr>\n<tr>\n";
+                        dotCode+= "<tr>";
+                        dotCode +="<td height='60' colspan='15'>Extendida</td>  ";
+                        dotCode +="</tr>\n";
+                        dotCode +="<tr>\n";
 
                         //Se lee el EBR
                         EBR ebr;
@@ -588,28 +605,30 @@ void REP_::reportDisk(){
                         else{
                             dotCode+= "<td height='120'>"+to_string(usedSpace)+"% del disco </td>";
                         }
-                        dotCode+= "</tr>\n</TABLE>\n</td>\n";
+                        dotCode += "</tr>\n";
+                        dotCode += "</TABLE>\n";
+                        dotCode += "</td>\n";
 
-                        if(i!=3){
-                            int aux1 = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
-                            int aux2 = mbr_partitions[i+1]->part_start;
-                            if(aux2 != -1){
-                                if((aux2-aux1)!=0){
-                                    double porcentaje = (aux2-aux1)*100;
-                                    porcentaje = porcentaje/master.mbr_tamano;
-                                    dotCode+= "<td height='120' width='200'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n";
-                                }
-                            }
-                        }
-                        else{
-                            int aux1 = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
-                            int mbrSize = master.mbr_tamano + (int)sizeof(MBR);
-                            if((mbrSize-aux1)!=0){
-                                double porcentaje = (mbrSize - aux1) + sizeof(MBR);
+                        if(i==3){
+                            double porcentaje;
+                            porcentaje = master.mbr_tamano + sizeof(MBR);
+                            porcentaje = porcentaje - mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
+                            if(porcentaje!=0){
+                                porcentaje = porcentaje + sizeof(MBR);
                                 porcentaje = (porcentaje*100);
                                 porcentaje = porcentaje/master.mbr_tamano;
                                 dotCode+= "<td height='120' width='100'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n";
-                            }
+                            } 
+                        }
+                        else{
+                            int aux1 = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
+                            int aux2 = mbr_partitions[i+1]->part_start;
+                            double porcentaje = aux2-aux1;
+                            if(aux2 != -1 && porcentaje !=0){
+                                porcentaje = porcentaje*100;
+                                porcentaje = porcentaje/master.mbr_tamano;
+                                dotCode+= "<td height='120' width='200'>Libre<br/>"+to_string(porcentaje)+"% del disco</td>\n"; 
+                            }                           
                         }
                     }
                 }
@@ -724,39 +743,65 @@ void REP_::reportInode(){
 
                 dotCode += " nodo_"+to_string(i)+"[ shape=none,label=<\n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>";
-                dotCode += "<tr> <td colspan='2'> <b>Inodo "+to_string(i)+"</b> </td></tr>\n";
-                dotCode += "<tr> <td> i_uid </td> <td> "+to_string(auxInodo.i_gid)+"</td>  </tr>\n";
-                dotCode += "<tr> <td> i_gid </td> <td> "+to_string(auxInodo.i_gid)+"</td>  </tr>\n";
-                dotCode += "<tr> <td> i_size </td> <td> "+to_string(auxInodo.i_size)+"</td> </tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'> <b>Inodo "+to_string(i)+"</b> </td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td> i_uid </td> <td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td> i_gid </td> <td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "</tr>\n";
+                
+                dotCode += "<tr>";
+                dotCode += "<td> i_size </td> <td> "+to_string(auxInodo.i_size)+"</td>";
+                dotCode += "</tr>\n";
 
                 struct tm *timeStruct;
                 char date[50];
 
                 timeStruct=localtime(&auxInodo.i_atime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_atime </td><td>";
+                dotCode += "<tr>";
+                dotCode += "<td> i_atime </td><td>";
                 dotCode += date;
-                dotCode += "</td> </tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&auxInodo.i_ctime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += " <tr><td> i_ctime </td><td>";
+                dotCode += " <tr>";
+                dotCode += "<td> i_ctime </td><td>";
                 dotCode += date;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&auxInodo.i_mtime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_mtime </td><td>";
-                dotCode += "</td></tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td> i_mtime </td><td>";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 for(int j = 0; j < 15; j++){
-                    dotCode += "<tr><td> i_block_"+to_string(j)+"</td><td>"+to_string(auxInodo.i_block[j])+" </td> </tr>\n";
+                    dotCode += "<tr>";
+                dotCode += "<td> i_block_"+to_string(j)+"</td>";
+                dotCode += "<td>"+to_string(auxInodo.i_block[j])+" </td>";
+                dotCode += "</tr>\n";
                 }
 
-                dotCode += "<tr><td> i_type </td><td> ";
+                dotCode += "<tr>";
+                dotCode += "<td> i_type </td><td> ";
                 dotCode += auxInodo.i_type;
-                dotCode += "</td></tr>\n";
-                dotCode += "<tr><td> i_perm </td><td>"+to_string(auxInodo.i_perm)+"</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td> i_perm </td>";
+                dotCode += "<td>"+to_string(auxInodo.i_perm)+"</td>";
+                dotCode += "</tr>\n";
                 dotCode += "</table>>]\n";
             }
             bitMapStart++;
@@ -980,12 +1025,24 @@ void REP_::reportBloque(){
                 fread(&carpetas,sizeof(BloqueCarpetas),1,file);
                 dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-                dotCode += "<tr><td colspan='2'><b> Bloque Carpeta "+to_string(i)+"</b></td></tr>\n";
-                dotCode += "<tr><td> b_name </td><td> b_inodo </td></tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'>";
+                dotCode += "<b> Bloque Carpeta "+to_string(i)+"</b>";
+                dotCode += "</td>";
+                dotCode +=" </tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td> b_name </td><td> b_inodo </td>";
+                dotCode += "</tr>\n";
+
                 for(int j = 0;j < 4;j++){
-                    dotCode += "<tr><td>";
+                    dotCode += "<tr>";
+                    dotCode += "<td>";
                     dotCode += carpetas.b_content[j].b_name;
-                    dotCode += "</td><td>"+to_string(carpetas.b_content[j].b_inodo)+"</td></tr>\n";
+                    dotCode += "</td>";
+                    dotCode += "<td>"+to_string(carpetas.b_content[j].b_inodo)+"</td>";
+                    dotCode += "</tr>\n";
                 }
                 dotCode += "</table>>]\n";
             }
@@ -995,10 +1052,16 @@ void REP_::reportBloque(){
                 fread(&archivos,sizeof(BloqueArchivos),1,file);
                 dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-                dotCode += "<tr><td colspan='2'><b> Bloque Archivo "+to_string(i)+"</b> </td></tr>\n";
-                dotCode += "<tr><td colspan='2'>";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'><b> Bloque Archivo "+to_string(i)+"</b> </td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'>";
                 dotCode += archivos.b_content;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
                 dotCode += "</table>>]\n";
             }
             else if(myChar == '3'){
@@ -1009,9 +1072,13 @@ void REP_::reportBloque(){
                 fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
                 dotCode += "bloque_"+to_string(i)+" [shape=plaintext,label=< \n";
                 dotCode += "<table border='0'>\n";
-                dotCode += "<tr><td><b>Bloque de Apuntadores "+to_string(i)+"</b></td></tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td><b>Bloque de Apuntadores "+to_string(i)+"</b></td>";
+                dotCode += "</tr>\n";
                 for(int j = 0; j < 16; j++){
-                    dotCode += "<tr><td>"+to_string(apuntadores.b_pointers[j])+"</td></tr>\n";
+                    dotCode += "<tr>";
+                    dotCode += "<td>"+to_string(apuntadores.b_pointers[j])+"</td>";
+                    dotCode += "</tr>\n";
                 }
                 dotCode += "</table>>]\n";
             }
@@ -1096,12 +1163,19 @@ void REP_::reportBloque(){
                 fread(&carpetas,sizeof(BloqueCarpetas),1,file);
                 dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-                dotCode += "<tr><td colspan='2'><b> Bloque Carpeta "+to_string(i)+"</b></td></tr>\n";
-                dotCode += "<tr><td> b_name </td><td> b_inodo </td></tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'><b> Bloque Carpeta "+to_string(i)+"</b></td>";
+                dotCode += "</tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td> b_name </td><td> b_inodo </td>";
+                dotCode += "</tr>\n";
                 for(int j = 0;j < 4;j++){
-                    dotCode += "<tr><td>";
+                    dotCode += "<tr>";
+                    dotCode += "<td>";
                     dotCode += carpetas.b_content[j].b_name;
-                    dotCode += "</td><td>"+to_string(carpetas.b_content[j].b_inodo)+"</td></tr>\n";
+                    dotCode += "</td>";
+                    dotCode += "<td>"+to_string(carpetas.b_content[j].b_inodo)+"</td>";
+                    dotCode += "</tr>\n";
                 }
                 dotCode += "</table>>]\n";
             }
@@ -1111,10 +1185,17 @@ void REP_::reportBloque(){
                 fread(&archivos,sizeof(BloqueArchivos),1,file);
                 dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-                dotCode += "<tr><td colspan='2'><b> Bloque Archivo "+to_string(i)+"</b> </td></tr>\n";
-                dotCode += "<tr><td colspan='2'>";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'><b> Bloque Archivo "+to_string(i)+"</b> </td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'>";
                 dotCode += archivos.b_content;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
+
                 dotCode += "</table>>]\n";
             }
             else if(myChar == '3'){
@@ -1125,9 +1206,13 @@ void REP_::reportBloque(){
                 fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
                 dotCode += "bloque_"+to_string(i)+" [shape=plaintext,label=< \n";
                 dotCode += "<table border='0'>\n";
-                dotCode += "<tr><td><b>Bloque de Apuntadores "+to_string(i)+"</b></td></tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td><b>Bloque de Apuntadores "+to_string(i)+"</b></td>";
+                dotCode += "</tr>\n";
                 for(int j = 0; j < 16; j++){
-                    dotCode += "<tr><td>"+to_string(apuntadores.b_pointers[j])+"</td></tr>\n";
+                    dotCode += "<tr>";
+                    dotCode += "<td>"+to_string(apuntadores.b_pointers[j])+"</td>";
+                    dotCode += "</tr>\n";
                 }
                 dotCode += "</table>>]\n";
             }
@@ -1207,9 +1292,10 @@ void REP_::reportBitMapInodos(){
     partIndex = disk->findPartitionIndex();
 
     if(partIndex != -1){
-        MBR master;
-        SuperBloque super;
+        
+        
         FILE *file = fopen(disk->getPath().data(),"r+b");
+        MBR master;
         fread(&master,sizeof(MBR),1,file);
         Partition *mbr_partitions[4];
         mbr_partitions[0]=&master.mbr_partition_1;
@@ -1217,6 +1303,7 @@ void REP_::reportBitMapInodos(){
         mbr_partitions[2]=&master.mbr_partition_3;
         mbr_partitions[3]=&master.mbr_partition_4;
 
+        SuperBloque super;
         fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
@@ -1249,12 +1336,13 @@ void REP_::reportBitMapInodos(){
         cout<< "\u001B[32m" << "[OK] Reporte de Bitmap de Inodos creado exitosamente"<< "\x1B[0m" << endl;
     }
     else{
-        partIndex = disk->findLogicPartitionStart();
-        EBR extendedBoot;
-        SuperBloque super;
+        partIndex = disk->findLogicPartitionStart();     
         FILE *file = fopen(disk->getPath().data(),"rb+");
+
         fseek(file,partIndex,SEEK_SET);
+        EBR extendedBoot;
         fread(&extendedBoot,sizeof(EBR),1,file);
+        SuperBloque super;
         fread(&super,sizeof(SuperBloque),1,file);
 
         char myByte;
@@ -1410,37 +1498,88 @@ void REP_::reportSuperBloque(){
         string dotCode = "digraph G{\n";
         dotCode += "superBloqueTable[shape=none,label=<";
         dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-        dotCode += "<tr><td colspan='2'><b> Super Bloque </b></td></tr>\n";
-        dotCode += "<tr><td> s_inodes_count </td><td>"+to_string(super.s_inodes_count)+" </td> </tr>\n";
-        dotCode += "<tr><td> s_blocks_count </td><td>"+to_string(super.s_blocks_count)+"</td></tr>\n";
-        dotCode += "<tr><td> s_free_block_count </td><td>"+to_string(super.s_free_blocks_count)+"</td> </tr>\n";
-        dotCode += "<tr><td> s_free_inodes_count </td><td>"+to_string(super.s_free_inodes_count)+"</td></tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td colspan='2'><b> Super Bloque </b></td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_inodes_count </td><td>"+to_string(super.s_inodes_count)+" </td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_blocks_count </td><td>"+to_string(super.s_blocks_count)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_free_block_count </td><td>"+to_string(super.s_free_blocks_count)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_free_inodes_count </td><td>"+to_string(super.s_free_inodes_count)+"</td>";
+        dotCode +="</tr>\n";
 
         struct tm *timeStruct;
         char fecha[50];
 
         timeStruct=localtime(&super.s_mtime);
         strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-        dotCode += "<tr><td> s_mtime </td><td> ";
+        dotCode += "<tr>";
+        dotCode +="<td> s_mtime </td>";
+        dotCode +="<td> ";
         dotCode += fecha;
-        dotCode += "</td></tr>\n";
+        dotCode += "</td>";
+        dotCode +="</tr>\n";
         
         timeStruct=localtime(&super.s_umtime);
         strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-        dotCode += "<tr><td> s_umtime </td><td>";
+        dotCode += "<tr>";
+        dotCode +="<td> s_umtime </td>";
+        dotCode +="<td>";
         dotCode += fecha;
-        dotCode += " </td></tr>\n";
+        dotCode += "</td>";
+        dotCode +="</tr>\n";
 
-        dotCode += "<tr><td> s_mnt_count </td><td> "+to_string(super.s_mnt_count)+" </td> </tr>\n";
-        dotCode += "<tr><td> s_magic </td> <td> "+to_string(super.s_magic)+" </td> </tr>\n";
-        dotCode += "<tr><td> s_inode_size </td> <td>"+to_string(super.s_inode_size)+"</td></tr>\n";
-        dotCode += "<tr><td> s_block_size </td><td>"+to_string(super.s_block_size)+"</td></tr>\n";
-        dotCode += "<tr><td> s_first_ino </td><td>"+to_string( super.s_first_ino)+" </td> </tr>\n";
-        dotCode += "<tr><td> s_first_blo </td><td>"+to_string(super.s_first_blo)+"</td></tr>\n";
-        dotCode += "<tr><td> s_bm_inode_start </td><td>"+to_string(super.s_bm_inode_start)+"</td></tr>\n";
-        dotCode += "<tr><td> s_bm_block_start </td><td>"+to_string(super.s_bm_block_start)+"</td></tr>\n";
-        dotCode += "<tr><td> s_inode_start </td><td>"+to_string(super.s_inode_start)+"</td></tr>\n";
-        dotCode += "<tr><td> s_block_start </td><td>"+to_string(super.s_block_start)+"</td></tr>\n";
+        dotCode += "<tr>";
+        dotCode +="<td> s_mnt_count </td><td> "+to_string(super.s_mnt_count)+" </td>";
+        dotCode +="</tr>\n";
+        
+        dotCode += "<tr>";
+        dotCode +="<td> s_magic </td> <td> "+to_string(super.s_magic)+" </td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_inode_size </td> <td>"+to_string(super.s_inode_size)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_block_size </td><td>"+to_string(super.s_block_size)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_first_ino </td><td>"+to_string( super.s_first_ino)+" </td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_first_blo </td><td>"+to_string(super.s_first_blo)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_bm_inode_start </td><td>"+to_string(super.s_bm_inode_start)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_bm_block_start </td><td>"+to_string(super.s_bm_block_start)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_inode_start </td><td>"+to_string(super.s_inode_start)+"</td>";
+        dotCode +="</tr>\n";
+
+        dotCode += "<tr>";
+        dotCode +="<td> s_block_start </td><td>"+to_string(super.s_block_start)+"</td>";
+        dotCode +="</tr>\n";
+
         dotCode += "</table>>]\n";
         dotCode +="\n}";
 
@@ -1513,37 +1652,88 @@ void REP_::reportSuperBloque(){
             string dotCode = "digraph G{\n";
             dotCode += "superBloqueTable[shape=none,label=<";
             dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
-            dotCode += "<tr><td colspan='2'><b> Super Bloque </b></td></tr>\n";
-            dotCode += "<tr><td> s_inodes_count </td><td>"+to_string(super.s_inodes_count)+" </td> </tr>\n";
-            dotCode += "<tr><td> s_blocks_count </td><td>"+to_string(super.s_blocks_count)+"</td></tr>\n";
-            dotCode += "<tr><td> s_free_block_count </td><td>"+to_string(super.s_free_blocks_count)+"</td> </tr>\n";
-            dotCode += "<tr><td> s_free_inodes_count </td><td>"+to_string(super.s_free_inodes_count)+"</td></tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td colspan='2'><b> Super Bloque </b></td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_inodes_count </td><td>"+to_string(super.s_inodes_count)+" </td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_blocks_count </td><td>"+to_string(super.s_blocks_count)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_free_block_count </td><td>"+to_string(super.s_free_blocks_count)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_free_inodes_count </td><td>"+to_string(super.s_free_inodes_count)+"</td>";
+            dotCode +="</tr>\n";
 
             struct tm *timeStruct;
             char fecha[50];
 
             timeStruct=localtime(&super.s_mtime);
             strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-            dotCode += "<tr><td> s_mtime </td><td> ";
+            dotCode += "<tr>";
+            dotCode +="<td> s_mtime </td>";
+            dotCode +="<td> ";
             dotCode += fecha;
-            dotCode += "</td></tr>\n";
+            dotCode += "</td>";
+            dotCode +="</tr>\n";
             
             timeStruct=localtime(&super.s_umtime);
             strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-            dotCode += "<tr><td> s_umtime </td><td>";
+            dotCode += "<tr>";
+            dotCode +="<td> s_umtime </td>";
+            dotCode +="<td>";
             dotCode += fecha;
-            dotCode += " </td></tr>\n";
+            dotCode += "</td>";
+            dotCode +="</tr>\n";
 
-            dotCode += "<tr><td> s_mnt_count </td><td> "+to_string(super.s_mnt_count)+" </td> </tr>\n";
-            dotCode += "<tr><td> s_magic </td> <td> "+to_string(super.s_magic)+" </td> </tr>\n";
-            dotCode += "<tr><td> s_inode_size </td> <td>"+to_string(super.s_inode_size)+"</td></tr>\n";
-            dotCode += "<tr><td> s_block_size </td><td>"+to_string(super.s_block_size)+"</td></tr>\n";
-            dotCode += "<tr><td> s_first_ino </td><td>"+to_string( super.s_first_ino)+" </td> </tr>\n";
-            dotCode += "<tr><td> s_first_blo </td><td>"+to_string(super.s_first_blo)+"</td></tr>\n";
-            dotCode += "<tr><td> s_bm_inode_start </td><td>"+to_string(super.s_bm_inode_start)+"</td></tr>\n";
-            dotCode += "<tr><td> s_bm_block_start </td><td>"+to_string(super.s_bm_block_start)+"</td></tr>\n";
-            dotCode += "<tr><td> s_inode_start </td><td>"+to_string(super.s_inode_start)+"</td></tr>\n";
-            dotCode += "<tr><td> s_block_start </td><td>"+to_string(super.s_block_start)+"</td></tr>\n";
+            dotCode += "<tr>";
+            dotCode +="<td> s_mnt_count </td><td> "+to_string(super.s_mnt_count)+" </td>";
+            dotCode +="</tr>\n";
+            
+            dotCode += "<tr>";
+            dotCode +="<td> s_magic </td> <td> "+to_string(super.s_magic)+" </td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_inode_size </td> <td>"+to_string(super.s_inode_size)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_block_size </td><td>"+to_string(super.s_block_size)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_first_ino </td><td>"+to_string( super.s_first_ino)+" </td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_first_blo </td><td>"+to_string(super.s_first_blo)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_bm_inode_start </td><td>"+to_string(super.s_bm_inode_start)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_bm_block_start </td><td>"+to_string(super.s_bm_block_start)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_inode_start </td><td>"+to_string(super.s_inode_start)+"</td>";
+            dotCode +="</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode +="<td> s_block_start </td><td>"+to_string(super.s_block_start)+"</td>";
+            dotCode +="</tr>\n";
+            
             dotCode += "</table>>]\n";
             dotCode +="\n}";
 
@@ -1655,8 +1845,7 @@ void REP_::reportTree(){
         char myChar;
 
         string dotCode="";
-        dotCode += "digraph G{\n";
-        dotCode += "rankdir=\"LR\"\n";
+        dotCode += "digraph G{\n rankdir=\"LR\"\n";
 
         while(aux < super.s_bm_block_start){
             linkInt = 0;
@@ -1667,56 +1856,82 @@ void REP_::reportTree(){
             if(myChar == '1'){
                 fseek(file,super.s_inode_start + sizeof(InodeTable)*i,SEEK_SET);
                 fread(&inodo,sizeof(InodeTable),1,file);
-                dotCode += "inodo_"+to_string(i)+" [shape=plaintext label=<\n";
+                dotCode += "inodo_"+to_string(i);
+                dotCode += " [shape=plaintext label=<\n";
                 dotCode += "<table border='0' cellborder='1'>";
 
-                dotCode += "<tr> <td colspan='2' bgcolor=\"dodgerblue\" ><b>Inodo ";
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2' bgcolor=\"dodgerblue\" ><b>Inodo ";
                 dotCode += to_string(i);
-                dotCode += "</b></td></tr>\n";
+                dotCode += "</b>";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
-                dotCode += "<tr><td> i_uid </td><td>";
+                dotCode += "<tr>";
+                dotCode += "<td> i_uid </td><td>";
                 dotCode += to_string(inodo.i_uid);
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
-                dotCode += "<tr><td > i_gid </td><td>";
+                dotCode += "<tr>";
+                dotCode += "<td > i_gid </td><td>";
                 dotCode += to_string(inodo.i_gid);
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
-                dotCode += "<tr><td > i_size </td><td>";
+                dotCode += "<tr>";
+                dotCode += "<td > i_size </td><td>";
                 dotCode += to_string(inodo.i_size);
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 struct tm *timeStruct;
                 char fecha[100];
 
                 timeStruct=localtime(&inodo.i_atime);
                 strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_atime </td><td> ";
+                dotCode += "<tr>";
+                dotCode += "<td> i_atime </td><td> ";
                 dotCode+=fecha;
-                dotCode+=" </td> </tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&inodo.i_ctime);
                 strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_ctime </td><td> ";
+                dotCode += "<tr>";
+                dotCode += "<td> i_ctime </td><td> ";
                 dotCode += fecha;
-                dotCode +=" </td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&inodo.i_mtime);
                 strftime(fecha,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_mtime </td><td> ";
+                dotCode += "<tr>";
+                dotCode += "<td> i_mtime </td><td> ";
                 dotCode += fecha;
-                dotCode += " </td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 for(int j = 0; j < 15; j++){
                     //AQUI
-                    dotCode += "<tr><td> i_block_";
-                    dotCode += to_string(linkInt)+"</td><td port=\"f"+to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td></tr>\n";
+                    dotCode += "<tr>";
+                    dotCode += "<td> i_block_";
+                    dotCode += to_string(linkInt)+"</td><td port=\"f";
+                    dotCode += to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td>";
+                    dotCode +="</tr>\n";
                     linkInt++;
                 }
-                dotCode += "<tr><td> i_type </td><td> ";
+                dotCode += "<tr>";
+                dotCode +="<td> i_type </td>";
+                dotCode +="<td> ";
                 dotCode += inodo.i_type;
-                dotCode += " </td></tr>\n";
-                dotCode += "<tr><td> i_perm </td><td> "+to_string(inodo.i_perm)+" </td></tr>\n";
+                dotCode += "</td>";
+                dotCode +="</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode +="<td> i_perm </td><td> "+to_string(inodo.i_perm)+" </td>";
+                dotCode +="</tr>\n";
+
                 dotCode += "</table>>]\n";
 
                 for (int j = 0; j < 15; j++){
@@ -1727,17 +1942,28 @@ void REP_::reportTree(){
                         if(myChar == '1'){
                             fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[j],SEEK_SET);
                             fread(&carpetasBlock,sizeof(BloqueCarpetas),1,file);
-                            dotCode += "bloque_"+to_string(inodo.i_block[j])+"[shape=plaintext label=<\n";
+                            dotCode += "bloque_"+to_string(inodo.i_block[j]);
+                            dotCode += "[shape=plaintext label=<\n";
                             dotCode += "<table border='0' cellborder='1'>\n";
-                            dotCode += "<tr><td colspan='2' bgcolor=\"limegreen\"><b>Bloque de Carpetas "+to_string(inodo.i_block[j])+"</b></td></tr>\n";
-                            dotCode += "<tr><td> b_name </td><td> b_inode </td></tr>\n";
+
+                            dotCode += "<tr>";
+                            dotCode +="<td colspan='2' bgcolor=\"limegreen\"><b>Bloque de Carpetas "+to_string(inodo.i_block[j])+"</b></td>";
+                            dotCode +="</tr>\n";
+
+                            dotCode += "<tr>";
+                            dotCode +="<td> b_name </td><td> b_inode </td>";
+                            dotCode +="</tr>\n";
+
                             for(int m = 0;m < 4; m++){
-                                dotCode += "<tr><td> ";
+                                dotCode += "<tr>";
+                                dotCode +="<td> ";
                                 dotCode += carpetasBlock.b_content[m].b_name;
                                 //AQUI
-                                dotCode += "</td><td port=\"f"+to_string(linkInt)+"\"> ";
+                                dotCode += "</td>";
+                                dotCode +="<td port=\"f"+to_string(linkInt)+"\"> ";
                                 dotCode += to_string(carpetasBlock.b_content[m].b_inodo);
-                                dotCode += " </td></tr>\n";
+                                dotCode += "</td>";
+                                dotCode +="</tr>\n";
                                 linkInt++;
                             }
                             dotCode += "</table>>]\n";
@@ -1754,23 +1980,36 @@ void REP_::reportTree(){
                         else if(myChar == '2'){
                             fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[j],SEEK_SET);
                             fread(&archivosBlock,sizeof(BloqueArchivos),1,file);
-                            dotCode += " bloque_"+to_string(inodo.i_block[j])+" [shape=plaintext label=< \n";
+                            dotCode += " bloque_"+to_string(inodo.i_block[j]);
+                            dotCode += "[shape=plaintext label=< \n";
                             dotCode += "<table border='0' cellborder='1'>\n";
-                            dotCode += "<tr><td bgcolor=\"orange\"><b>Bloque de Archivos "+to_string(inodo.i_block[j])+"</b></td></tr>\n";
-                            dotCode += "<tr> <td> ";
+
+                            dotCode += "<tr>";
+                            dotCode +="<td bgcolor=\"orange\"><b>Bloque de Archivos "+to_string(inodo.i_block[j])+"</b></td>";
+                            dotCode +="</tr>\n";
+
+                            dotCode += "<tr> ";
+                            dotCode += "<td> ";
                             dotCode += archivosBlock.b_content;
-                            dotCode += "</td></tr>\n";
+                            dotCode += "</td>";
+                            dotCode += "</tr>\n";
                             dotCode += "</table>>]\n";
                         }
                         else if(myChar == '3'){
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[j],SEEK_SET);
                             fread(&apuntadoresBlock,sizeof(BloqueApuntadores),1,file);
-                            dotCode += "bloque_"+to_string(inodo.i_block[j])+" [shape=plaintext label=< \n";
+                            dotCode += "bloque_"+to_string(inodo.i_block[j]);
+                            dotCode += "[shape=plaintext label=< \n";
                             dotCode += "<table border='0' cellborder='1'>\n";
-                            dotCode += "<tr><td bgcolor=\"gold\" ><b>Bloque de Apuntadores "+to_string(inodo.i_block[j])+"</b></td></tr>\n";
+                            dotCode += "<tr>";
+                            dotCode += "<td bgcolor=\"gold\" ><b>Bloque de Apuntadores "+to_string(inodo.i_block[j])+"</b></td>";
+                            dotCode += "</tr>\n";
                             for(int m = 0; m < 16; m++){
                                 //AQUI
-                                dotCode += "<tr><td port=\"f"+to_string(linkInt)+"\">"+to_string(apuntadoresBlock.b_pointers[m])+"</td></tr>\n";
+                                dotCode += "<tr>";
+                                dotCode +="<td port=\"f"+to_string(linkInt)+"\">";
+                                dotCode += to_string(apuntadoresBlock.b_pointers[m])+"</td>";
+                                dotCode +="</tr>\n";
                                 linkInt++;
                             }
                             dotCode += "</table>>]\n";
@@ -1782,15 +2021,25 @@ void REP_::reportTree(){
                                     if(myChar == '1'){
                                         fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*apuntadoresBlock.b_pointers[m],SEEK_SET);
                                         fread(&carpetasBlock,sizeof(BloqueCarpetas),1,file);
-                                        dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m])+" [shape=plaintext label=<\n";
+                                        dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m]);
+                                        dotCode += "[shape=plaintext label=<\n";
                                         dotCode += "<table border='0' cellborder='1'>\n";
-                                        dotCode += "<tr><td colspan=\'2\' bgcolor=\"seagreen\"><b>Bloque de Carpetas "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td></tr>\n";
-                                        dotCode += "<tr><td> b_name </td> <td> b_inode </td></tr>\n";
+
+                                        dotCode += "<tr>";
+                                        dotCode += "<td colspan=\'2\' bgcolor=\"seagreen\"><b>Bloque de Carpetas "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td>";
+                                        dotCode += "</tr>\n";
+
+                                        dotCode += "<tr>";
+                                        dotCode += "<td> b_name </td> <td> b_inode </td>";
+                                        dotCode += "</tr>\n";
                                         for(int n = 0;n < 4; n++){
-                                            dotCode += "<tr><td> ";
+                                            dotCode += "<tr>";
+                                            dotCode += "<td> ";
                                             dotCode += carpetasBlock.b_content[n].b_name;
                                             //AQUI
-                                            dotCode += "</td><td port=\"f"+to_string(linkInt)+"\"> "+to_string(carpetasBlock.b_content[n].b_inodo)+"</td></tr>\n";
+                                            dotCode += "</td><td port=\"f"+to_string(linkInt)+"\"> ";
+                                            dotCode += to_string(carpetasBlock.b_content[n].b_inodo)+"</td>";
+                                            dotCode += "</tr>\n";
                                             linkInt++;
                                         }
                                         dotCode += "</table>>]\n";
@@ -1807,12 +2056,20 @@ void REP_::reportTree(){
                                     else if(myChar == '2'){
                                         fseek(file,super.s_block_start +sizeof(BloqueArchivos)*apuntadoresBlock.b_pointers[m],SEEK_SET);
                                         fread(&archivosBlock,sizeof(BloqueArchivos),1,file);
-                                        dotCode += " bloque_"+to_string(apuntadoresBlock.b_pointers[m])+" [shape=plaintext label=<\n";
+                                        dotCode += " bloque_"+to_string(apuntadoresBlock.b_pointers[m]);
+                                        dotCode += " [shape=plaintext label=<\n";
                                         dotCode += "<table border='0' cellborder='1'>\n";
-                                        dotCode += "<tr><td bgcolor=\"orange\"><b>Bloque de Archivos "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td></tr>\n";
-                                        dotCode += "<tr><td> ";
+
+                                        dotCode += "<tr>";
+                                        dotCode +="<td bgcolor=\"orange\"><b>Bloque de Archivos "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td>";
+                                        dotCode +="</tr>\n";
+
+                                        dotCode += "<tr>";
+                                        dotCode +="<td> ";
                                         dotCode += archivosBlock.b_content;
-                                        dotCode += " </td></tr>\n";
+                                        dotCode += " </td>";
+                                        dotCode +="</tr>\n";
+
                                         dotCode += "</table>>]\n";
                                     }
                                 }

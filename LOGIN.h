@@ -230,25 +230,23 @@ int LOGIN_::makeLog(){
 
     FILE *file = fopen(diskPath.data(),"r+b");
 
-    char auxArr[500] = "\0";
+    //Se lee superbloque
     SuperBloque super;
-    InodeTable inodo;
-
     fseek(file,sesion.superStart,SEEK_SET);
     fread(&super,sizeof(SuperBloque),1,file);
 
     //Se lee inodo de users.txt
+    InodeTable inodo;
     fseek(file,super.s_inode_start + sizeof(InodeTable),SEEK_SET);
     fread(&inodo,sizeof(InodeTable),1,file);
 
+    char auxArr[500] = "\0";
+    BloqueArchivos archivo;
     //Se lee el archivo users.txt
     for(int i = 0; i < 15; i++){
         if(inodo.i_block[i] != -1){
-            BloqueArchivos archivo;
-            fseek(file,super.s_block_start,SEEK_SET);
-            for(int j = 0; j <= inodo.i_block[i]; j++){
-                fread(&archivo,sizeof(BloqueArchivos),1,file);
-            }
+            fseek(file,super.s_block_start + sizeof(BloqueArchivos)* inodo.i_block[i],SEEK_SET);
+            fread(&archivo,sizeof(BloqueArchivos),1,file);
             strcat(auxArr,archivo.b_content);
         }
     }
@@ -325,12 +323,12 @@ char LOGIN_::getLogicPartFit(string path){
             EBR ebr;
             fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
             while(fread(&ebr,sizeof(EBR),1,file)!=0 ){
-                if(strcmp(id.data(),ebr.part_name) == 0){
+                if(ebr.part_next==-1){
+                    break;
+                }
+                else if(strcmp(id.data(),ebr.part_name) == 0){
                     fclose(file);
                     return ebr.part_fit;
-                }
-                else if(ebr.part_next==-1){
-                    break;
                 }
                 else{
                     fseek(file,ebr.part_next,SEEK_SET);
@@ -344,34 +342,33 @@ char LOGIN_::getLogicPartFit(string path){
 }
 
 int LOGIN_::buscarGrupo(string name){
-    FILE *fp = fopen(sesion.direccion.data(),"r+b");
+    FILE *file = fopen(sesion.direccion.data(),"r+b");
 
-    char cadena[400] = "\0";
+    //Se lee superbloque
     SuperBloque super;
+    fseek(file,sesion.superStart,SEEK_SET);
+    fread(&super,sizeof(SuperBloque),1,file);
+
+    //Se lee inodo de users.txt
     InodeTable inodo;
+    fseek(file,super.s_inode_start + sizeof(InodeTable),SEEK_SET);
+    fread(&inodo,sizeof(InodeTable),1,file);
 
-    fseek(fp,sesion.superStart,SEEK_SET);
-    fread(&super,sizeof(SuperBloque),1,fp);
-
-    //Se lee el inodo de users.txt
-    fseek(fp,super.s_inode_start + sizeof(InodeTable), SEEK_SET);
-    fread(&inodo,sizeof(InodeTable),1,fp);
-
+    char auxArr[500] = "\0";
+    BloqueArchivos archivo;
+    //Se lee el archivo users.txt
     for(int i = 0; i < 15; i++){
         if(inodo.i_block[i] != -1){
-            BloqueArchivos archivo;
-            fseek(fp,super.s_block_start,SEEK_SET);
-            for(int j = 0; j <= inodo.i_block[i]; j++){
-                fread(&archivo,sizeof(BloqueArchivos),1,fp);
-            }
-            strcat(cadena,archivo.b_content);
+            fseek(file,super.s_block_start + sizeof(BloqueArchivos)* inodo.i_block[i],SEEK_SET);
+            fread(&archivo,sizeof(BloqueArchivos),1,file);
+            strcat(auxArr,archivo.b_content);
         }
     }
 
-    fclose(fp);
+    fclose(file);
 
     char *endString;
-    char *token = strtok_r(cadena,"\n",&endString);
+    char *token = strtok_r(auxArr,"\n",&endString);
     while(token != NULL){
         char id[2];
         char tipo[2];

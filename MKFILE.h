@@ -572,13 +572,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             //Se lee bloque de apuntadores
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                             fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
-                            int bloqueLibre = 0;
-                            for (int m = 0; m < 16; m++) {
-                                if(apuntadores.b_pointers[m] == -1){
-                                    bloqueLibre = m;
-                                    break;
-                                }
-                            }
                             
                             
                             int bitBloque = buscarBit(file,sesion.fit,'B');
@@ -587,6 +580,13 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             myChar = '2';
                             fwrite(&myChar,sizeof(char),1,file);
                             //Se configura y reescribe bloque de apuntadores
+                            int bloqueLibre = 0;
+                            for (int m = 0; m < 16; m++) {
+                                if(apuntadores.b_pointers[m] == -1){
+                                    bloqueLibre = m;
+                                    break;
+                                }
+                            }
                             apuntadores.b_pointers[bloqueLibre] = bitBloque;
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                             fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
@@ -632,8 +632,8 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     }
                     //Se reescribe sl superbloque
                     super.s_first_ino = super.s_first_ino + 1;
-                    super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
+                    super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
                     super.s_first_blo = super.s_first_blo + numBloques;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);

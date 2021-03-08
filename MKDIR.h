@@ -65,7 +65,7 @@ public:
      * Busca si hay un bloque de archivo libre en cierto inodo
      * @param file = Indice del inodo donde se comienza
      * @param numInodo = Indice del inodo
-     * @param content = Apuntador donde se guardara el indice en el bloque de carpetas donde esta el bloque libre libre si hay
+     * @param content = Apuntador donde se guardara el indice EN el bloque de carpetas donde esta el bloque libre libre si hay
      * @param bloque = Apuntador donde se guardara el indice del bloque de carpetas libre si hay
      * @param pointer = Apuntador donde se guardara el indice del bloque de apuntadores libre si hay
      * @param inodo = Apuntador al struct del Inodo donde esta el bloque libre
@@ -494,10 +494,10 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
     char *token = strtok(tempPath,"/");
     int auxCont = 0;
     
-    while(token != nullptr){
+    while(token != NULL){
         auxCont++;
         lista.push_back(token);
-        token = strtok(nullptr,"/");
+        token = strtok(NULL,"/");
     }
     strcpy(auxPath,tempPath);
     
@@ -511,11 +511,11 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
 
     //Una carpeta
     if(auxCont == 1){
-        int contentP = 0;
-        int apuntadorLibre = 0;
-        int pointer = 0;
+        int pointerInCarpetas = 0;
+        int pointerCarpetas = 0;
+        int pointerApuntadores = 0;
         char myChar;
-        if(getBloqueArchivo(file,index,contentP,apuntadorLibre,pointer,inodo,carpetas,apuntadores)){
+        if(getBloqueArchivo(file,index,pointerInCarpetas,pointerCarpetas,pointerApuntadores,inodo,carpetas,apuntadores)){
             bool auxBool1=inodo.i_uid == sesion.user;
             bool auxBool2=inodo.i_gid == sesion.group;
             bool permisos = permisoDeEscritura(inodo.i_perm,auxBool1,auxBool2);
@@ -523,13 +523,13 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
             if((sesion.user == 1 && sesion.group == 1) || permisos ){
                 
                 //Apuntadores Directos
-                if (apuntadorLibre<12){
+                if (pointerCarpetas<12){
                     int bitInodo = buscarBit(file,sesion.fit,'I');
 
                     //Se agrega la carpeta en el bloque de carpetas
-                    carpetas.b_content[contentP].b_inodo = bitInodo;
-                    strcpy(carpetas.b_content[contentP].b_name,nombreAC);
-                    fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[apuntadorLibre],SEEK_SET);
+                    carpetas.b_content[pointerInCarpetas].b_inodo = bitInodo;
+                    strcpy(carpetas.b_content[pointerInCarpetas].b_name,nombreAC);
+                    fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[pointerCarpetas],SEEK_SET);
                     fwrite(&carpetas,sizeof(BloqueCarpetas),1,file);
 
                     //Se crea el nuevo inodo
@@ -581,7 +581,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     return folderCreatedDir;
                 }
                 //Apuntador indirecto simple
-                if(apuntadorLibre == 12){
+                if(pointerCarpetas == 12){
                     
 
                     int bitInodo = buscarBit(file,sesion.fit,'I');
@@ -591,9 +591,9 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     myChar='1';
                     fwrite(&myChar,sizeof(char),1,file);
                     //Se agrega la carpeta en el bloque de carpetas
-                    carpetas.b_content[contentP].b_inodo = bitInodo;
-                    strcpy(carpetas.b_content[contentP].b_name,nombreAC);
-                    fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[pointer],SEEK_SET);
+                    carpetas.b_content[pointerInCarpetas].b_inodo = bitInodo;
+                    strcpy(carpetas.b_content[pointerInCarpetas].b_name,nombreAC);
+                    fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[pointerApuntadores],SEEK_SET);
                     fwrite(&carpetas,sizeof(BloqueCarpetas),1,file);
 
 
@@ -650,21 +650,22 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                 return badPermissionsDir;
             }
         }
-        //Todos bloques estan llenos
+        //No hay bloques archivos disponibles
         else{
-            pointer = -1;
+            pointerApuntadores = -1;
             fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
             fread(&inodo,sizeof(InodeTable),1,file);
+
             for (int i = 0; i < 15; i++) {
                 if(i<12){
                     if(inodo.i_block[i] == -1){
-                        apuntadorLibre = i;
+                        pointerCarpetas = i;
                         break;
                     }
                 }
                 else if(i == 12){
                     if(inodo.i_block[i] == -1){
-                        apuntadorLibre = 12;
+                        pointerCarpetas = 12;
                         break;
                     }
                     else{
@@ -672,12 +673,12 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                         fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
                         for(int j = 0; j < 16; j++){
                             if(apuntadores.b_pointers[j] == -1){
-                                apuntadorLibre = 12;
-                                pointer = j;
+                                pointerCarpetas = 12;
+                                pointerApuntadores = j;
                                 break;
                             }
                         }
-                        if(pointer!= -1){
+                        if(pointerApuntadores!= -1){
                             break;
                         }
                     }
@@ -689,11 +690,11 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
             if((sesion.user == 1 && sesion.group == 1) || permisos ){
 
                 //apuntador Directo
-                if(apuntadorLibre<12){
+                if(pointerCarpetas<12){
                     
                     int bitBloque = buscarBit(file,sesion.fit,'B');
                     //Se agrega bloque a inodo y se reescribe
-                    inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_block[pointerCarpetas] = bitBloque;
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
 
@@ -762,11 +763,11 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
 
                 }
                 //Apuntador Indirecto Simple Primer Vez
-                if(apuntadorLibre == 12 && pointer==-1){
+                if(pointerCarpetas == 12 && pointerApuntadores==-1){
 
                     //Se guarda bloque en el inodo
                     int bitBloque = buscarBit(file,sesion.fit,'B');//Apuntador
-                    inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_block[pointerCarpetas] = bitBloque;
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
                     //Se marca en el bitmap de bloques
@@ -838,19 +839,19 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     //Se reescribe el superbloque
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
                     super.s_first_ino = super.s_first_ino + 1;
-                    super.s_first_blo = super.s_first_blo + 3;
                     super.s_free_blocks_count = super.s_free_blocks_count - 3;
+                    super.s_first_blo = super.s_first_blo + 3;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
                     return folderCreatedDir;
 
                 }
                 //Apuntador Indirecto Simple n-vez
-                else if(apuntadorLibre == 12 && pointer!=-1){
+                else if(pointerCarpetas == 12 && pointerApuntadores!=-1){
 
                     //Se registra bloque en el bloque de apuntadores
                     int bitBloque = buscarBit(file,sesion.fit,'B');
-                    apuntadores.b_pointers[pointer] = bitBloque;
+                    apuntadores.b_pointers[pointerApuntadores] = bitBloque;
                     fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                     fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 

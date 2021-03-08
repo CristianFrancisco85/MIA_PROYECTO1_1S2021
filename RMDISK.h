@@ -17,15 +17,9 @@ private:
     bool statusFlag;// Indica si ha errores con el comando.
 public:
 
-    /**
-     * Constructor
-    */
-    RMDISK_():path(""){};
-
-    /**
-     * Borra el archivo
-    */
-    void deleteDisk();
+    RMDISK_(){
+        this->path="";
+    };
 
     /**
      * Verifica que los parametros sean validos 
@@ -37,28 +31,12 @@ public:
      * @param ruta: path del disco a eliminar
     */
     void setPath(char* ruta);
-};
 
-void RMDISK_::deleteDisk(){
-    setStatus();
-    if(this->statusFlag){
-        
-        string auxPath = this->path;
-        FILE *file;
-        file=fopen(path.c_str(),"r");
-        if(file != NULL){
-            string command = "rm '" + string(this->path) + "'";
-            system(command.c_str());
-            cout << "[OK] Disco eliminado exitosamente" << endl;
-        }
-        else{
-            cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
-        }
-    }
-    else{
-        cout << "\u001B[31m" << "[BAD PARAM] Falta parametro Path" << "\x1B[0m" << endl;
-    }
-}
+    /**
+     * Borra el archivo
+    */
+    void deleteDisk();
+};
 
 void RMDISK_::setStatus(){
     this->statusFlag = false;
@@ -85,3 +63,23 @@ void RMDISK_::setPath(char * value){
     }
 }
 
+void RMDISK_::deleteDisk(){
+    setStatus();
+    if(this->statusFlag){
+        
+        string auxPath = this->path;
+        FILE *file;
+        file=fopen(path.c_str(),"r");
+        if(file != NULL){
+            string command = "rm '" + string(this->path) + "'";
+            system(command.c_str());
+            cout << "[OK] Disco eliminado exitosamente" << endl;
+        }
+        else{
+            cout << "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
+        }
+    }
+    else{
+        cout << "\u001B[31m" << "[BAD PARAM] Falta parametro Path" << "\x1B[0m" << endl;
+    }
+}

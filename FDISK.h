@@ -315,7 +315,7 @@ void FDISK_::createPrimaryPartition(){
         int usedBytes=0;
         for(int i= 0; i < 4; i++){
             if(mbr_partitions[i]->part_status!='1'){
-                usedBytes += mbr_partitions[i]->part_size;
+                usedBytes = usedBytes + mbr_partitions[i]->part_size;
             }
         }
         // Se verifica si hay una particion disponible y con espacio disponible
@@ -338,12 +338,10 @@ void FDISK_::createPrimaryPartition(){
                         //Se calcula la mejor posicion
                         int bestPartitionIndex = partitionIndex;
                         for(int i = 0; i < 4; i++){
-                            if(mbr_partitions[i]->part_start == -1 || (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize())){
+                            if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1 ){
                                 //Si se encontro una posicion candidata diferente a la que se tiene marcada
-                                if(i != partitionIndex){
-                                    if(mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size ){
-                                        bestPartitionIndex = i;
-                                    }
+                                if(i != partitionIndex && mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size ){
+                                    bestPartitionIndex = i;                                  
                                 }
                             }
                         }
@@ -405,12 +403,10 @@ void FDISK_::createPrimaryPartition(){
                         //Se calcula la peor posicion
                         int worstPartitionIndex = partitionIndex;
                         for(int i = 0; i < 4; i++){
-                            if(mbr_partitions[i]->part_start == -1 || (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize())){
+                            if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1){
                                 //Si se encontro una posicion candidata diferente a la que se tiene marcada
-                                if(i != partitionIndex){
-                                    if(mbr_partitions[i]->part_size > mbr_partitions[worstPartitionIndex]->part_size ){
-                                        worstPartitionIndex = i;
-                                    }
+                                if(i != partitionIndex && mbr_partitions[i]->part_size > mbr_partitions[worstPartitionIndex]->part_size ){
+                                    worstPartitionIndex = i;
                                 }
                             }
                         }
@@ -498,7 +494,7 @@ void FDISK_::createExtendedPartition(){
             }
             // Se verifica si hay una particion disponible y con espacio disponible
             for(int i = 0; i < 4; i++){
-                if(mbr_partitions[i]->part_start == -1 || (mbr_partitions[i]->part_status== '1' && mbr_partitions[i]->part_size >= getSize())){
+                if( (mbr_partitions[i]->part_status== '1' && mbr_partitions[i]->part_size >= getSize()) || mbr_partitions[i]->part_start == -1 ){
                     partitionIndex= i;
                     break;
                 }
@@ -517,12 +513,10 @@ void FDISK_::createExtendedPartition(){
                             //Se calcula la mejor posicion
                             int bestPartitionIndex = partitionIndex;
                             for(int i = 0; i < 4; i++){
-                                if(mbr_partitions[i]->part_start == -1 || (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize())){
+                                if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1 ){
                                     //Si se encontro una posicion candidata diferente a la que se tiene marcada
-                                    if(i != partitionIndex){
-                                        if(mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size ){
-                                            bestPartitionIndex = i;
-                                        }
+                                    if(i != partitionIndex && mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size){
+                                        bestPartitionIndex = i;
                                     }
                                 }
                             }
@@ -606,12 +600,10 @@ void FDISK_::createExtendedPartition(){
                             //Se calcula la peor posicion
                             int wrostPartitionIndex = partitionIndex;
                             for(int i = 0; i < 4; i++){
-                                if(mbr_partitions[i]->part_start == -1 || (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize())){
+                                if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1){
                                     //Si se encontro una posicion candidata diferente a la que se tiene marcada
-                                    if(i != partitionIndex){
-                                        if(mbr_partitions[i]->part_size > mbr_partitions[wrostPartitionIndex]->part_size ){
-                                            wrostPartitionIndex = i;
-                                        }
+                                    if(i != partitionIndex && mbr_partitions[i]->part_size > mbr_partitions[wrostPartitionIndex]->part_size){
+                                        wrostPartitionIndex = i;
                                     }
                                 }
                             }
@@ -841,8 +833,9 @@ void FDISK_::addToPartition(){
         mbr_partitions[3]=&master.mbr_partition_4;
 
         int partIndex = -1;
-        int extendedIndex = -1;
         bool flagExtendida = false;
+        int extendedIndex = -1;
+        
         //Se busca el indice de la particion
         for(int i = 0; i < 4; i++){
 
