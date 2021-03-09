@@ -29,6 +29,12 @@ public:
     }
 
     /**
+     *Setter del ID 
+      * @param size: ID de la particion montada
+     */
+    void setId(char* value);
+
+    /**
       *Setter del User 
       * @param Value: Nombre de usuario
      */
@@ -39,17 +45,6 @@ public:
       * @param size: Contraseña
      */
     void setPassword(char* value);
-
-    /**
-     *Setter del ID 
-      * @param size: ID de la particion montada
-     */
-    void setId(char* value);
-
-    /**
-     *Verifica que no haya error en los parametros 
-     */
-    void setStatus();
 
     /**
      *Inicia el Logeo 
@@ -77,6 +72,12 @@ public:
      * Realiza el logout
      */
     void logout();
+
+    /**
+    *  Verifica que no haya error en los parametros 
+    */
+    void setStatus();
+
 };
 
 extern list<MOUNT_> *mounted;
@@ -322,13 +323,13 @@ char LOGIN_::getLogicPartFit(string path){
         if(extendedIndex != -1){
             EBR ebr;
             fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
-            while(fread(&ebr,sizeof(EBR),1,file)!=0 ){
-                if(ebr.part_next==-1){
-                    break;
-                }
-                else if(strcmp(id.data(),ebr.part_name) == 0){
+            while(fread(&ebr,sizeof(EBR),1,file)!=0 ){               
+                if(strcmp(id.data(),ebr.part_name) == 0){
                     fclose(file);
                     return ebr.part_fit;
+                }
+                if(ebr.part_next==-1){
+                    break;
                 }
                 else{
                     fseek(file,ebr.part_next,SEEK_SET);

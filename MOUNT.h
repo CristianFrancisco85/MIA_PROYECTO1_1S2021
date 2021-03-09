@@ -54,16 +54,6 @@ public:
     void setLetter(char c);
 
     /**
-     * Getter del nombre de la particion
-    */
-    string getName();
-
-    /**
-     * Getter de la ruta del disco de la partición.
-    */
-    string getPath();
-
-    /**
      * Getter de la letra del disco a la cual pertenece la partición
     */
     char getLetter();
@@ -72,6 +62,16 @@ public:
      * Getter del número de partición montada de un disco.
     */
     int getNumber();
+
+    /**
+     * Getter del nombre de la particion
+    */
+    string getName();
+
+    /**
+     * Getter de la ruta del disco de la partición.
+    */
+    string getPath();
 
     /**
      * Getter del ID en formato 97+ Numero + Letra Disco
@@ -140,14 +140,14 @@ void MOUNT_::setLetter(char c){
 
 void MOUNT_::setStatus(){
 
+    if(this->name == ""){
+        cout << "\u001B[31m" << "[BAD PARAM] Name no valido" << "\x1B[0m" << endl;
+    }
     if(this->path !="" && this->name != ""){
         statusFlag = true;
     }
     if(this->path == ""){
         cout<< "\u001B[31m" << "[BAD PARAM] Path no valido" << "\x1B[0m" << endl;
-    }
-    if(this->name == ""){
-        cout << "\u001B[31m" << "[BAD PARAM] Name no valido" << "\x1B[0m" << endl;
     }
 }
 
@@ -222,8 +222,7 @@ bool MOUNT_::isMounted(){
 void MOUNT_::beginToMount(){
     setStatus();
     if(this->statusFlag){
-        setId();
-        cout<<"Montando particion "<< this->getId() <<" ..."<< endl;
+        cout<<"Montando particion "<< this->id <<" ..."<< endl;
         mountPartition();
     }
     else{
@@ -297,7 +296,7 @@ int MOUNT_::findLogicPartitionStart(){
             //se busca la particion logica
             while(fread(&ebr,sizeof(EBR),1,file)!=0){
 
-                if(strcmp(this->getName().c_str(),ebr.part_name) == 0){
+                if(strcmp(this->name.c_str(),ebr.part_name) == 0){
                     //Retorna el inicio del EBR de la particion logica encontrada
                     int aux= ftell(file);
                     fclose(file);
@@ -323,66 +322,68 @@ int MOUNT_::findLogicPartitionStart(){
 }
 
 void MOUNT_::mountPartition(){
+    setId();
     int partitionIndex;
-
-
     //Si es una particion primaria
     partitionIndex = findPartitionIndex();
     if(partitionIndex != -1){
         FILE*file= fopen(this->path.c_str(),"r+b");
         //Se lee MBR
-        MBR master;
-        fseek(file,0,SEEK_SET);
-        fread(&master,sizeof (MBR),1,file);
-        Partition *mbr_partitions[4];
-        mbr_partitions[0]=&master.mbr_partition_1;
-        mbr_partitions[1]=&master.mbr_partition_2;
-        mbr_partitions[2]=&master.mbr_partition_3;
-        mbr_partitions[3]=&master.mbr_partition_4;
-        //Se cambia el estatus a montado
-        mbr_partitions[partitionIndex]->part_status = '2';
+        if(file!=NULL){
+            MBR master;
+            fseek(file,0,SEEK_SET);
+            fread(&master,sizeof (MBR),1,file);
+            Partition *mbr_partitions[4];
+            mbr_partitions[0]=&master.mbr_partition_1;
+            mbr_partitions[1]=&master.mbr_partition_2;
+            mbr_partitions[2]=&master.mbr_partition_3;
+            mbr_partitions[3]=&master.mbr_partition_4;
+            //Se cambia el estatus a montado
+            mbr_partitions[partitionIndex]->part_status = '2';
 
-        //Se actualiza MBR
-        fseek(file,0, SEEK_SET);
-        fwrite(&master,sizeof (MBR),1,file);
-        fseek(file,0,SEEK_SET);
-        //Se vuelve a leer MBR
-        fread(&master, sizeof (MBR),1,file);
-        fclose(file);
+            //Se actualiza MBR
+            fseek(file,0, SEEK_SET);
+            fwrite(&master,sizeof (MBR),1,file);
+            fseek(file,0,SEEK_SET);
+            fclose(file);
 
-        if(isMounted()){
-            cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
-            
+            if(isMounted()){
+                cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
+            }
+            else{
+                mounted->push_back(*this);
+                cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido montada con ID: "<<this->id<< "\x1B[0m" << endl;
+            }
         }
-        else{
-            mounted->push_back(*this);
-            cout<< "\u001B[32m" << "[OK] La particion " <<this->name<<" ha sido montada con ID: "<<this->id<< "\x1B[0m" << endl;
-        }
+        
         return;
     }
 
     //Si es particion logica
     partitionIndex = findLogicPartitionStart();
     if(partitionIndex != -1){
-        FILE * file = fopen(getPath().c_str(),"r+b");
-        //Se lee el EBR
-        EBR ebr;
-        fseek(file, partitionIndex, SEEK_SET);
-        fread(&ebr, sizeof(EBR),1,file);
-        ebr.part_status = '2';
-        //Se reescribe el EBR
-        fseek(file,partitionIndex,SEEK_SET);
-        fwrite(&ebr,sizeof(EBR),1, file);
-        fclose(file);
+        FILE * file = fopen(this->path.c_str(),"r+b");
+        if(file!=NULL){
+            //Se lee el EBR
+            EBR ebr;
+            fseek(file, partitionIndex, SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            ebr.part_status = '2';
+            //Se reescribe el EBR
+            fseek(file,partitionIndex,SEEK_SET);
+            fwrite(&ebr,sizeof(EBR),1, file);
+            fclose(file);
 
-        if(isMounted()){
-            cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
-        }
-        else{
-            mounted->push_back(*this);
-            cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido montada"<< "\x1B[0m" << endl;
+            if(isMounted()){
+                cout<< "\u001B[31m" << "[BAD PARAM] La particion ya estaba montada" << "\x1B[0m" << endl;
+            }
+            else{
+                mounted->push_back(*this);
+                cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido montada"<< "\x1B[0m" << endl;
+            }
         }
         return;
+        
     }
 
 

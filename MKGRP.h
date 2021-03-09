@@ -9,6 +9,8 @@
 #include <structs.h>
 
 using namespace std;
+extern bool loged;
+extern Sesion sesion;
 
 class MKGRP_{
 private:
@@ -70,9 +72,6 @@ public:
     void setStatus();
 
 };
-
-extern bool loged;
-extern Sesion sesion;
 
 void MKGRP_::setName(char *value){
     this->name = value;

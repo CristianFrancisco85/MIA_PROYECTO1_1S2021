@@ -10,6 +10,8 @@
 #include <parser.h>
 
 using namespace std;
+extern bool loged;
+extern Sesion sesion;
 
 class RMGRP_{
 private:
@@ -51,9 +53,6 @@ public:
      */
     void guardarJournal(char *operacion, char *path, char *content);
 };
-
-extern bool loged;
-extern Sesion sesion;
 
 void RMGRP_::setName(char *name){
     this->name = name;

@@ -32,16 +32,16 @@ public:
     void setUser(char* value);
 
     /**
+    *Setter del Grupo 
+    * @param value: Nombre de usuario
+    */
+    void setGroup(char* value);
+
+    /**
       *Setter del Password 
       * @param value: Nombre de usuario
      */
     void setPassword(char* value);
-
-    /**
-      *Setter del Grupo 
-      * @param value: Nombre de usuario
-     */
-    void setGroup(char* value);
 
     /**
       *Comienza la ejecucion del comando
@@ -117,14 +117,15 @@ void MKUSR_::setStatus(){
         cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro User "<< "\x1B[0m" << endl;
         this->statusFlag=false;
     }
-    if(this->passwd ==""){
-        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro Password "<< "\x1B[0m" << endl;
-        this->statusFlag=false;
-    }
     if(this->group == ""){
         cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro Group "<< "\x1B[0m" << endl;
         this->statusFlag=false;
     }
+    if(this->passwd ==""){
+        cout<< "\u001B[31m" << "[BAD PARAM] No se especifico el parametro Password "<< "\x1B[0m" << endl;
+        this->statusFlag=false;
+    }
+    
 }
 
 void MKUSR_::init(){

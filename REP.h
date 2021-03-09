@@ -254,7 +254,7 @@ void REP_::reportMBR(){
     list<MOUNT_>::iterator i;
     for(i=mounted->begin(); i != mounted->end(); i++){
         if(i->getId() == this->id){
-            char aux[255];
+            char aux[300];
             strcpy(aux,i->getPath().c_str());
             this->ruta =aux;
             break;
@@ -380,8 +380,9 @@ void REP_::reportMBR(){
 
                 if(ebr.part_status != '1'){
 
-                    dotCode+= "subgraph cluster_"+to_string(ebrIndex)+"{\n label=\"EBR_"+to_string(ebrIndex)+"\"\n ";
-                    dotCode+= "table_"+to_string(ebrIndex)+"[shape=box, label=<\n ";
+                    dotCode += "subgraph cluster_"+to_string(ebrIndex);
+                    dotCode += "{\n label=\"EBR_"+to_string(ebrIndex)+"\"\n ";
+                    dotCode += "table_"+to_string(ebrIndex)+"[shape=box, label=<\n ";
                     
                     dotCode += "<TABLE width='400' height='200' cellspacing='-1' cellborder='1'>\n";
                     dotCode += "<tr>";
@@ -1320,12 +1321,12 @@ void REP_::reportBitMapInodos(){
             else{
                 fileData +="1 ";
             }
-            if(aux == 19){
-                aux = 0;
-                fileData += "\n";
+            if(aux != 19){
+                aux++;
             }
             else{
-                aux++;
+                aux = 0;
+                fileData += "\n";
             }
         }
         fclose(file);
@@ -1416,11 +1417,11 @@ void REP_::reportBitMapBloques(){
                 fileData +="1 ";
             }
             if(aux == 19){
-                aux = 0;
-                fileData += "\n";
+                aux++;
             }
             else{
-                aux++;
+                aux = 0;
+                fileData += "\n";
             }
         }
         fclose(file);

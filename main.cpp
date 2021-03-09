@@ -28,7 +28,7 @@ string toLowercase(string n){
     return n;
 }
 
-void parse(){
+int main(){
     system("clear");
     while(true){
 
@@ -36,12 +36,12 @@ void parse(){
         cout << "\u001B[36m" << "[INPUT] :" << "\x1B[0m";
         getline(cin, inputCommand);
 
-        if(inputCommand == "clear"){
+        if(inputCommand=="exit"){
             system("clear");
+            return 0;
         }
-        else if(inputCommand=="exit"){
+        else if(inputCommand == "clear"){
             system("clear");
-            break;
         }
         else if(inputCommand.length() ==0){
 
@@ -49,14 +49,14 @@ void parse(){
         else if(toLowercase(inputCommand.substr(0,4))== "exec"){
 
             string path = inputCommand.substr(inputCommand.find("=")+1, inputCommand.length() - 1);
+            string input;
+            string linea;
             if(path[0]== '\"'){
                 path = path.substr(1,path.length()-2);
             }
-            ifstream fe(path);
-            string input;
-            string linea;
-            while(getline(fe, linea)){
-                input +=linea;
+            ifstream myStream(path);
+            while(getline(myStream, linea)){
+                input += linea;
                 input += '\n';
             }
             input = toLowercase(input);
@@ -75,17 +75,10 @@ void parse(){
             inputCommand = toLowercase(inputCommand);
             inputCommand+='\n';
             YY_BUFFER_STATE bufferState = yy_scan_string(inputCommand.c_str());
-            if(yyparse()==0){
-                //cout<< "\u001B[32m"<< "---Ejecucion de Comando Terminada---"<< "\x1B[0m"<<endl;
-            }
-            else{
+            if(yyparse()!=0){
                 cout<<"\u001B[31m"<< "---Errores sintacticos en el comando---"<<endl;
             }
             yy_delete_buffer(bufferState);
         }
     }
-}
-
-int main(){
-    parse();
 }

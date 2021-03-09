@@ -45,12 +45,6 @@ public:
     void setSize(char* size);
 
     /**
-     * Fit Setter
-     * @param fit: Tipo de ajuste del disco.
-    */
-    void setFit(char* fit);
-
-    /**
      * Units Setter
      * @param unit: Indica si son megabytes, kilobytes
     */
@@ -61,6 +55,12 @@ public:
      * @param path: Path del disco
     */
     void setPath(char* path);
+
+    /**
+     * Fit Setter
+     * @param fit: Tipo de ajuste del disco.
+    */
+    void setFit(char* fit);
 
     /**
      * Verifica si los parametros son validos
@@ -92,18 +92,14 @@ public:
     
 };
 
-void MKDISK_::setSize(char *value){
-    this->size =atoi(value);
-}
-
 void MKDISK_::setFit(char *value){
     strcpy(this->fit, value);
     this->fit[0] = toupper(fit[0]);
     this->fit[1] = toupper(fit[1]);
 }
 
-void MKDISK_::setUnit(char *value){
-    this->unit=value;
+void MKDISK_::setSize(char *value){
+    this->size =atoi(value);
 }
 
 void MKDISK_::setPath(char *value){
@@ -115,6 +111,10 @@ void MKDISK_::setPath(char *value){
     else{
         strcpy(this->path, value);
     }
+}
+
+void MKDISK_::setUnit(char *value){
+    this->unit=value;
 }
 
 void MKDISK_::setStatus(){
@@ -166,20 +166,20 @@ int MKDISK_::createDisk(){
 
         //Si crea directorio si es necesario
         string comando = "sudo mkdir -p \'";
-        comando+= dirname(path);
-        comando+= '\'';
+        comando += dirname(path);
+        comando += '\'';
         system(comando.c_str());
 
         //Se otorga permiso
         comando = "sudo chmod -R 777 \'";
-        comando+= dirname(path);
+        comando += dirname(path);
         comando += '\'';
         system(comando.c_str());
         
         //Se abre un stream de datos en el directorio
-        FILE *f;
-        f = fopen(pathConName.c_str(),"wb");
-        if(f == NULL){
+        FILE *file;
+        file = fopen(pathConName.c_str(),"wb");
+        if(file == NULL){
             return 0;
         }
         
@@ -195,8 +195,8 @@ int MKDISK_::createDisk(){
         masterBootRecord.disk_fit = getFit();
 
         //Se graba MBR
-        fseek(f,0,SEEK_SET);
-        fwrite(&this->masterBootRecord, sizeof (MBR),1,f);
+        fseek(file,0,SEEK_SET);
+        fwrite(&this->masterBootRecord, sizeof (MBR),1,file);
 
         //Se escribe disco
         int diskSize = getSize();
@@ -206,13 +206,13 @@ int MKDISK_::createDisk(){
             if(i==0){
                 bloqueDatos[0] = '0';
             }
-            fwrite(&bloqueDatos, sizeof(bloqueDatos), 1, f);
+            fwrite(&bloqueDatos, sizeof(bloqueDatos), 1, file);
         }
 
         //Se lee MBR
-        fseek(f,0,SEEK_SET);
-        fread(&masterBootRecord,sizeof (MBR),1,f);
-        fclose(f);
+        fseek(file,0,SEEK_SET);
+        fread(&masterBootRecord,sizeof (MBR),1,file);
+        fclose(file);
 
         cout<< "\u001B[32m" << "[OK] Disco creado exitosamente"<< "\x1B[0m" << endl;
         return 1;
