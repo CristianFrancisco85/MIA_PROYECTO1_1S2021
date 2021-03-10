@@ -21,6 +21,8 @@
 #include <RMUSR.h>
 #include <MKFILE.h>
 #include <MKDIR.h>
+#include <LOSS.h>
+#include <RECOVERY.h>
 #include <list>
 #include <structs.h>
 
@@ -49,6 +51,8 @@ MKUSR_* mkusr_ = new MKUSR_();
 RMUSR_* rmusr_ = new RMUSR_();
 MKFILE_* mkfile_ = new MKFILE_();
 MKDIR_* mkdir_= new MKDIR_();
+LOSS_* loss_= new LOSS_();
+RECOVERY_* recovery_= new RECOVERY_();
 
 bool loged = false;
 Sesion sesion;
@@ -109,6 +113,8 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> r
 %token<STRING> cont
 %token<STRING> mkdir
+%token<STRING> loss
+%token<STRING> recovery
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -180,6 +186,10 @@ string lineaGuiones="-----------------------------------------------------------
 %type<STRING> MKDIRPARAMS
 %type<STRING> MKDIRPARAM
 
+%type<STRING> LOSS
+
+%type<STRING> RECOVERY
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -216,6 +226,8 @@ INSTRUCCION:
     |RMUSR
     |MKFILE
     |MKDIR
+    |LOSS
+    |RECOVERY
     |error{}
 ;
 
@@ -429,6 +441,14 @@ MKDIRPARAM:
     guion p {mkdir_->setPParam();}
     | guion path igual ruta {mkdir_->setPath($4);}
     | guion path igual cadena {mkdir_->setPath($4);}
+;
+
+LOSS:
+    loss guion id_ igual id {loss_->setId($5);loss_->init();cout << lineaGuiones <<endl;loss_= new LOSS_();}
+;
+
+RECOVERY:
+    recovery guion id_ igual id {recovery_->setId($5);recovery_->init();cout << lineaGuiones <<endl;recovery_= new RECOVERY_();}
 ;
 
 %%

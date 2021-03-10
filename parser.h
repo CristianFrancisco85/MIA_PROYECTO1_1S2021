@@ -94,18 +94,20 @@ extern int yydebug;
     r = 304,
     cont = 305,
     mkdir = 306,
-    rep = 307,
-    mbr = 308,
-    disk = 309,
-    inode = 310,
-    block = 311,
-    bm_block = 312,
-    bm_inode = 313,
-    sb = 314,
-    journaling = 315,
-    tree = 316,
-    _2fs = 317,
-    _3fs = 318
+    loss = 307,
+    recovery = 308,
+    rep = 309,
+    mbr = 310,
+    disk = 311,
+    inode = 312,
+    block = 313,
+    bm_block = 314,
+    bm_inode = 315,
+    sb = 316,
+    journaling = 317,
+    tree = 318,
+    _2fs = 319,
+    _3fs = 320
   };
 #endif
 
@@ -114,12 +116,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 187 "sintactico.y" /* yacc.c:1909  */
+#line 197 "sintactico.y" /* yacc.c:1909  */
 
 char* STRING;
 char* NUM;
 
-#line 123 "parser.h" /* yacc.c:1909  */
+#line 125 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MKFILE_H
 #define MKFILE_H
 
@@ -258,15 +259,15 @@ int MKFILE_::buscarCarpetaArchivo(FILE *file, char* path){
     fseek(file,sesion.superStart,SEEK_SET);
     fread(&super,sizeof(SuperBloque),1,file);
     byteInodo = super.s_inode_start;
-
-    InodeTable inodo;
-    BloqueCarpetas carpeta;
-    BloqueApuntadores apuntador;
+  
     for (int i = 0; i < cont; i++) {
-
+       
         fseek(file,byteInodo,SEEK_SET);
+        InodeTable inodo;
         fread(&inodo,sizeof(InodeTable),1,file);
+
         bool flag = false;
+
         for(int j = 0; j < 15; j++){
             if(inodo.i_block[j] != -1){
 
@@ -274,8 +275,10 @@ int MKFILE_::buscarCarpetaArchivo(FILE *file, char* path){
                 string auxString="";
                 fseek(file,byteBloque,SEEK_SET);
 
+                BloqueCarpetas carpeta;
                 //Apuntadores directos
                 if(j < 12){
+                    
                     fread(&carpeta,sizeof(BloqueCarpetas),1,file);
                     for (int m = 0; m < 4; m++) {
 
@@ -297,6 +300,8 @@ int MKFILE_::buscarCarpetaArchivo(FILE *file, char* path){
                 }
                 //Apuntador indirecto
                 else if(j == 12){
+
+                    BloqueApuntadores apuntador;
                     fread(&apuntador,sizeof(BloqueApuntadores),1,file);
                     for(int m = 0; m < 16; m++){
                         if(apuntador.b_pointers[m] != -1){
@@ -453,32 +458,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             fwrite(&myChar,sizeof(char),1,file);
                             if(size > 64){
                                 for(int j = 0; j < 64; j++){
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
+                                    if(content.length() == 0){
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar=0;
                                         }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
                                     }
                                 }                               
                                 size = size - 64;
                             }
                             else{
                                 for (int j = 0; j < size; j++) {
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
+                                    if(content.length() == 0){
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar=0;
                                         }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
                                     }
                                 }
                             }
@@ -529,32 +534,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                             if(size > 64){
                                 for(int j = 0; j < 64; j++){
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
+                                    if(content.length() == 0){
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar = 0;
-                                        }                                       
+                                        }    
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;                                   
                                     }
                                 }
                                 size -= 64;
                             }
                             else{
                                 for (int j = 0; j < size; j++) {
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
+                                    if(content.length() == 0){
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar = 0;
-                                        }   
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;   
                                     }
                                 }
                             }
@@ -595,15 +600,15 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             if(size > 64){
                                 for(int j = 0; j < 64; j++){
                                     if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar = 0;
-                                        }                                       
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;                                       
                                     }
                                 }   
                                 size -= 64;
@@ -611,15 +616,15 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             else{
                                 for (int j = 0; j < size; j++) {
                                     if(content.length() != 0){
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                    else{
                                         archivo.b_content[j] = defaultContent[contentChar];
                                         contentChar++;
                                         if(contentChar == 10){
                                             contentChar = 0;
-                                        }   
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;   
                                     }
                                 }
                             }
@@ -630,15 +635,11 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                         }
 
                     }
-                    //Se reescribe sl superbloque
-                    super.s_first_ino = super.s_first_ino + 1;
-                    super.s_free_inodes_count = super.s_free_inodes_count - 1;
+                    //Se reescribe el superbloque
                     super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
                     super.s_first_blo = super.s_first_blo + numBloques;
-                    fseek(file,sesion.superStart,SEEK_SET);
-                    fwrite(&super,sizeof(SuperBloque),1,file);
-                    return fileCreated;
                 }
+                //Se reescribe el superbloque
                 super.s_first_ino = super.s_first_ino + 1;
                 super.s_free_inodes_count = super.s_free_inodes_count - 1;
                 fseek(file,sesion.superStart,SEEK_SET);
@@ -754,32 +755,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fwrite(&myChar,sizeof(char),1,file);
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }                               
                                     size = size - 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }
                                 }
@@ -830,32 +831,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -895,32 +896,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }   
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -932,14 +933,10 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                         }
                         //Se reescribe sl superbloque
-                        super.s_first_ino = super.s_first_ino + 1;
                         super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
-                        super.s_free_inodes_count = super.s_free_inodes_count - 1;
                         super.s_first_blo = super.s_first_blo + numBloques;
-                        fseek(file,sesion.superStart,SEEK_SET);
-                        fwrite(&super,sizeof(SuperBloque),1,file);
-                        return fileCreated;
                     }
+                    //Se reescribe sl superbloque
                     super.s_first_ino = super.s_first_ino + 1;
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
                     fseek(file,sesion.superStart,SEEK_SET);
@@ -948,7 +945,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                 }
                 //Apuntador Indirecto Simple Primera Vez
-                if(apuntadorLibre ==12 && pointer==-1){
+                else if(apuntadorLibre ==12 && pointer==-1){
 
                     //Se guarda bloque en el inodo
                     int bitBloque = buscarBit(file,sesion.fit,'B');
@@ -1028,32 +1025,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fwrite(&myChar,sizeof(char),1,file);
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }                               
                                     size = size - 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }
                                 }
@@ -1104,32 +1101,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -1168,32 +1165,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }   
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -1205,19 +1202,20 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                         }
                         //Se reescribe sl superbloque
-                        super.s_first_ino = super.s_first_ino + 1;
                         super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
-                        super.s_free_inodes_count = super.s_free_inodes_count - 1;
                         super.s_first_blo = super.s_first_blo + numBloques;
-                        fseek(file,sesion.superStart,SEEK_SET);
-                        fwrite(&super,sizeof(SuperBloque),1,file);
-                        return fileCreated;
                     }
+                    //Se reescribe sl superbloque
+                    super.s_first_ino = super.s_first_ino + 1;
+                    super.s_free_inodes_count = super.s_free_inodes_count - 1;
+                    fseek(file,sesion.superStart,SEEK_SET);
+                    fwrite(&super,sizeof(SuperBloque),1,file);
+                    return fileCreated;
 
 
                 }
                 //Apuntador Indirecto Simple n-vez
-                if(apuntadorLibre == 12 && pointer!=-1){
+                else if(apuntadorLibre == 12 && pointer!=-1){
 
                     
                     int bitBloque = buscarBit(file,sesion.fit,'B');
@@ -1287,32 +1285,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fwrite(&myChar,sizeof(char),1,file);
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }                               
                                     size = size - 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar=0;
                                             }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;
                                         }
                                     }
                                 }
@@ -1363,32 +1361,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -1428,32 +1426,32 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             
                                 if(size > 64){
                                     for(int j = 0; j < 64; j++){
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }                                       
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;                                       
                                         }
                                     }   
                                     size -= 64;
                                 }
                                 else{
                                     for (int j = 0; j < size; j++) {
-                                        if(content.length() != 0){
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                        else{
+                                        if(content.length() == 0){
                                             archivo.b_content[j] = defaultContent[contentChar];
                                             contentChar++;
                                             if(contentChar == 10){
                                                 contentChar = 0;
-                                            }   
+                                            }
+                                        }
+                                        else{
+                                            archivo.b_content[j] = content[contentChar];
+                                            contentChar++;   
                                         }
                                     }
                                 }
@@ -1465,15 +1463,16 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
                         }
                         //Se reescribe sl superbloque
-                        super.s_first_ino = super.s_first_ino + 1;
                         super.s_free_blocks_count = super.s_free_blocks_count - numBloques;
-                        super.s_free_inodes_count = super.s_free_inodes_count - 1;
-                        super.s_first_blo = super.s_first_blo + numBloques;
-                        fseek(file,sesion.superStart,SEEK_SET);
-                        fwrite(&super,sizeof(SuperBloque),1,file);
-                        return fileCreated;
+                        super.s_first_blo = super.s_first_blo + numBloques;                        
                     }
-
+                    //Se reescribe sl superbloque
+                    super.s_first_ino = super.s_first_ino + 1;
+                    super.s_free_inodes_count = super.s_free_inodes_count - 1;
+                    fseek(file,sesion.superStart,SEEK_SET);
+                    fwrite(&super,sizeof(SuperBloque),1,file);
+                    return fileCreated;
+                    
                 }
 
             }

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MKDIR_H
 #define MKDIR_H
 
@@ -206,12 +207,10 @@ int MKDIR_::buscarCarpetaArchivo(FILE *file, char* path){
     fread(&super,sizeof(SuperBloque),1,file);
     byteInodo = super.s_inode_start;
 
-    InodeTable inodo;
-    BloqueCarpetas carpeta;
-    BloqueApuntadores apuntador;
     for (int i = 0; i < cont; i++) {
 
         fseek(file,byteInodo,SEEK_SET);
+        InodeTable inodo;
         fread(&inodo,sizeof(InodeTable),1,file);
         bool flag = false;
         for(int j = 0; j < 15; j++){
@@ -220,7 +219,8 @@ int MKDIR_::buscarCarpetaArchivo(FILE *file, char* path){
                 int byteBloque = super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[j];
                 string auxString="";
                 fseek(file,byteBloque,SEEK_SET);
-
+                
+                BloqueCarpetas carpeta;
                 //Apuntadores directos
                 if(j < 12){
                     fread(&carpeta,sizeof(BloqueCarpetas),1,file);
@@ -244,6 +244,7 @@ int MKDIR_::buscarCarpetaArchivo(FILE *file, char* path){
                 }
                 //Apuntador indirecto
                 else if(j == 12){
+                    BloqueApuntadores apuntador;
                     fread(&apuntador,sizeof(BloqueApuntadores),1,file);
                     for(int m = 0; m < 16; m++){
                         if(apuntador.b_pointers[m] != -1){

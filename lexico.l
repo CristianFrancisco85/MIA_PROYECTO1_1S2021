@@ -81,6 +81,8 @@ id ([a-zA-Z]|[0-9]|"_")*
 "r" {yylval.STRING = strdup(yytext);return (r);};
 "cont" {yylval.STRING = strdup(yytext);return (cont);};
 "mkdir" {yylval.STRING = strdup(yytext);return (mkdir);};
+"loss" {yylval.STRING = strdup(yytext);return (loss);};
+"recovery" {yylval.STRING = strdup(yytext);return (recovery);};
 
 
 {string} {yylval.STRING = strdup(yytext);return (cadena);};

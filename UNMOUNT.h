@@ -13,9 +13,7 @@ private:
     string id; //ID de la particion
     bool statusFlag; //Indica si hay errores en el comando
 public:
-    /**
-     * Constructor
-    */
+
     UNMOUNT_(){
         this->id="";
         this->statusFlag=false;
@@ -32,11 +30,6 @@ public:
     */
     string getId();
 
-    /**
-     * Desmonta la particion
-    */
-    void unmountPartition();
-
     /*
      * Inicia el proceso de desmontaje
     */
@@ -46,7 +39,6 @@ public:
      * Verifica si hay errores en el comando
     */
     void setStatus();
-
     
 };
 
@@ -75,18 +67,14 @@ void UNMOUNT_::setStatus(){
 void UNMOUNT_::beginToUnmount(){
     setStatus();
     if(this->statusFlag){
-        unmountPartition();
-    }
-}
-
-void UNMOUNT_::unmountPartition(){
-    list<MOUNT_>::iterator i;
-    for(i = mounted->begin(); i != mounted->end();++i){
-        if(i->getId() == this->id){
-            cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido desmontada"<< "\x1B[0m" << endl;
-            mounted->erase(i);
-            return;
+        list<MOUNT_>::iterator i;
+        for(i = mounted->begin(); i != mounted->end();++i){
+            if(i->getId() == this->id){
+                cout<< "\u001B[32m" << "[OK] La particion " <<this->id<<" ha sido desmontada"<< "\x1B[0m" << endl;
+                mounted->erase(i);
+                return;
+            }
         }
+        cout<< "\u001B[31m" << "[BAD PARAM] La particion "<<this->id<<" no esta montada" << "\x1B[0m" << endl;
     }
-    cout<< "\u001B[31m" << "[BAD PARAM] La particion "<<this->id<<" no esta montada" << "\x1B[0m" << endl;
 }
