@@ -338,14 +338,14 @@ void FDISK_::createPrimaryPartition(){
                         //Se calcula la mejor posicion
                         int bestPartitionIndex = partitionIndex;
                         for(int i = 0; i < 4; i++){
-                            if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1 ){
+                            if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || (mbr_partitions[i]->part_status == '0' && mbr_partitions[i]->part_start == -1) ){
                                 //Si se encontro una posicion candidata diferente a la que se tiene marcada
                                 if(i != partitionIndex && mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size ){
                                     bestPartitionIndex = i;                                  
                                 }
                             }
                         }
-
+                        partitionIndex=bestPartitionIndex;
                         //Se configura el struct de la particion
                         mbr_partitions[partitionIndex]->part_status = '0';
                         mbr_partitions[partitionIndex]->part_type = 'P';
@@ -403,13 +403,14 @@ void FDISK_::createPrimaryPartition(){
                         //Se calcula la peor posicion
                         int worstPartitionIndex = partitionIndex;
                         for(int i = 0; i < 4; i++){
-                            if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1){
+                            if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || (mbr_partitions[i]->part_status == '0' && mbr_partitions[i]->part_start == -1)){
                                 //Si se encontro una posicion candidata diferente a la que se tiene marcada
                                 if(i != partitionIndex && mbr_partitions[i]->part_size > mbr_partitions[worstPartitionIndex]->part_size ){
                                     worstPartitionIndex = i;
                                 }
                             }
                         }
+                        partitionIndex=worstPartitionIndex;
 
                         //Se configura el struct de la particion
                         mbr_partitions[partitionIndex]->part_status = '0';
@@ -513,13 +514,14 @@ void FDISK_::createExtendedPartition(){
                             //Se calcula la mejor posicion
                             int bestPartitionIndex = partitionIndex;
                             for(int i = 0; i < 4; i++){
-                                if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1 ){
+                                if( (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || (mbr_partitions[i]->part_status == '0' && mbr_partitions[i]->part_start == -1) ){
                                     //Si se encontro una posicion candidata diferente a la que se tiene marcada
                                     if(i != partitionIndex && mbr_partitions[i]->part_size < mbr_partitions[bestPartitionIndex]->part_size){
                                         bestPartitionIndex = i;
                                     }
                                 }
                             }
+                            partitionIndex=bestPartitionIndex;
 
                             //Se configura el struct de la particion
                             mbr_partitions[partitionIndex]->part_status = '0';
@@ -600,13 +602,14 @@ void FDISK_::createExtendedPartition(){
                             //Se calcula la peor posicion
                             int wrostPartitionIndex = partitionIndex;
                             for(int i = 0; i < 4; i++){
-                                if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || mbr_partitions[i]->part_start == -1){
+                                if(  (mbr_partitions[i]->part_status == '1' && mbr_partitions[i]->part_size>=getSize()) || (mbr_partitions[i]->part_status == '0' && mbr_partitions[i]->part_start == -1)){
                                     //Si se encontro una posicion candidata diferente a la que se tiene marcada
                                     if(i != partitionIndex && mbr_partitions[i]->part_size > mbr_partitions[wrostPartitionIndex]->part_size){
                                         wrostPartitionIndex = i;
                                     }
                                 }
                             }
+                            partitionIndex=wrostPartitionIndex;
 
                             //Se configura el struct de la particion
                             mbr_partitions[partitionIndex]->part_status = '0';

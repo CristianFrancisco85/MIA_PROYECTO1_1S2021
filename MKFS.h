@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MKFS_H
 #define MKFS_H
 

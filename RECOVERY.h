@@ -10,11 +10,17 @@
 #include <iterator>
 #include <structs.h>
 
-#include "MKFILE.h"
-#include "MKDIR.h"
+#include <MKFILE.h>
+#include <MKDIR.h>
+#include <MKFS.h>
+#include <RMUSR.h>
+#include <RMGRP.h>
 
 extern MKFILE_* mkfile_;
 extern MKDIR_* mkdir_;
+extern MKFS_* mkfs_;
+extern RMGRP_* rmgrp_;
+extern RMUSR_* rmusr_;
 
 using namespace std;
 extern list<MOUNT_> *mounted;
@@ -120,7 +126,6 @@ void RECOVERY_::init(){
         }
 
         if(disk!=NULL){
-            makeRecovery(disk);
             if(loged){
                 if(strcmp(disk->getPath().c_str(),sesion.direccion.c_str())==0){
                     makeRecovery(disk);
@@ -170,6 +175,12 @@ void RECOVERY_::makeRecovery(MOUNT_ *disk){
             inicioJournal =mbr_partitions[partIndex]->part_start + sizeof(SuperBloque);
             inicioSuper = mbr_partitions[partIndex]->part_start;
             fread(&super,sizeof(SuperBloque),1,file);
+            //Se vuelve a dar formato de ext3
+            mkfs_->formatExt3(partIndex,disk);
+            mkfs_=new MKFS_();
+            //Se rescribe el superbloque
+            fseek(file,inicioSuper,SEEK_SET);
+            fwrite(&super,sizeof (SuperBloque),1,file);
         }
         else{
             partIndex = disk->findLogicPartitionStart();
@@ -177,7 +188,14 @@ void RECOVERY_::makeRecovery(MOUNT_ *disk){
                 EBR ebr;
                 fseek(file,partIndex,SEEK_SET);
                 fread(&ebr,sizeof(EBR),1,file);
+                inicioSuper = partIndex + sizeof(EBR);
                 fread(&super,sizeof(SuperBloque),1,file);
+                //Se vuelve a dar formato de ext3
+                mkfs_->formatExt3(partIndex,disk);
+                mkfs_=new MKFS_();
+                //Se rescribe el superbloque
+                fseek(file,inicioSuper,SEEK_SET);
+                fwrite(&super,sizeof (SuperBloque),1,file);
             }
         }
 
@@ -188,10 +206,33 @@ void RECOVERY_::makeRecovery(MOUNT_ *disk){
             while(ftell(file) < super.s_bm_inode_start){
                 fread(&registro,sizeof(Journal),1,file);
 
-                if(strcmp(registro.operationType,"mkgrp") == 0 || strcmp(registro.operationType,"mkusr") == 0){
+                if(strcmp(registro.operationType,"mkgrp") == 0){
                     sesion.user = 1;
                     sesion.group = 1;
                     addDataToUsers(registro.content);
+                    cout<< "\u001B[34m" << "[OK-Journal] MKGRP Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;
+                }
+                else if(strcmp(registro.operationType,"mkusr") == 0){
+                    sesion.user = 1;
+                    sesion.group = 1;
+                    addDataToUsers(registro.content);
+                    cout<< "\u001B[34m" << "[OK-Journal] MKUSR Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;
+                }
+                else if(strcmp(registro.operationType,"rmusr") == 0){
+                    sesion.user = 1;
+                    sesion.group = 1;
+                    rmusr_->setUser(registro.content);
+                    rmusr_->deleteUser();
+                    rmusr_= new RMUSR_();
+                    cout<< "\u001B[34m" << "[OK-Journal] RMUSR Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;
+                }
+                else if(strcmp(registro.operationType,"rmgrp") == 0){
+                    sesion.user = 1;
+                    sesion.group = 1;
+                    rmgrp_->setName(registro.content);
+                    rmgrp_->deleteGroup();
+                    rmgrp_= new RMGRP_();
+                    cout<< "\u001B[34m" << "[OK-Journal] RMGRP Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;
                 }
                 else if(strcmp(registro.operationType,"mkdir") == 0){
                     user = getUsuario(registro.user);
@@ -199,8 +240,9 @@ void RECOVERY_::makeRecovery(MOUNT_ *disk){
                     sesion.group = user.id_grp;
                     mkdir_->setPath(registro.path);
                     mkdir_->setPParam();
-                    mkdir_->init();
+                    mkdir_->nuevaCarpeta(registro.path,0);
                     mkdir_= new MKDIR_();
+                    cout<< "\u001B[34m" << "[OK-Journal] MKDIR Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;
                 }
                 else if(strcmp(registro.operationType,"mkfile") == 0){
                     user = getUsuario(registro.user);
@@ -218,12 +260,12 @@ void RECOVERY_::makeRecovery(MOUNT_ *disk){
                     else{
                         mkfile_->setCont(registro.content);
                     }
-                    mkfile_->init();
+                    mkfile_->nuevoArchivo(0,registro.path);
                     mkfile_= new MKFILE_();
-                                
+                    cout<< "\u001B[34m" << "[OK-Journal] MKFILE Ejecutado exitosamente desde Journal" << "\x1B[0m" << endl;           
                 }
             }
-            cout<< "\u001B[32m" << "[BAD PARAM] Se ha recuperado la informacion exitosamente" << "\x1B[0m" << endl;
+            cout<< "\u001B[32m" << "[OK] Se ha recuperado la informacion exitosamente" << "\x1B[0m" << endl;
             sesion.user = tempUsr;
             sesion.group = tempGrp;
         }

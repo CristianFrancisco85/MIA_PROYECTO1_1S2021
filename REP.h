@@ -1358,12 +1358,12 @@ void REP_::reportBitMapInodos(){
             else{
                 fileData +="1 ";
             }
-            if(aux == 19){
-                aux = 0;
-                fileData += "\n";
+            if(aux != 19){
+                aux++;
             }
             else{
-                aux++;
+                aux = 0;
+                fileData += "\n";
             }
         }
         fclose(file);
@@ -1416,7 +1416,7 @@ void REP_::reportBitMapBloques(){
             else{
                 fileData +="1 ";
             }
-            if(aux == 19){
+            if(aux != 19){
                 aux++;
             }
             else{
@@ -1452,12 +1452,12 @@ void REP_::reportBitMapBloques(){
             else{
                 fileData +="1 ";
             }
-            if(aux == 19){
-                aux = 0;
-                fileData += "\n";
+            if(aux != 19){
+                aux++;
             }
             else{
-                aux++;
+                aux = 0;
+                fileData += "\n";
             }
         }
         fclose(file);

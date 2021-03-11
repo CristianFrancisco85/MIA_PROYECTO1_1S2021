@@ -1,3 +1,4 @@
+#pragma once
 #ifndef RMGRP_H
 #define RMGRP_H
 
@@ -52,6 +53,12 @@ public:
      * @param content: Data para operaciones en users.txt o mkfile int
      */
     void guardarJournal(char *operacion, char *path, char *content);
+
+    /**
+     *Realiza la eliminacion del grupo
+    */
+    void deleteGroup();
+
 };
 
 void RMGRP_::setName(char *name){
@@ -77,97 +84,22 @@ void RMGRP_::init(){
         if(loged){
             if(sesion.user == 1 && sesion.group == 1){
                 if(buscarGrupo(name) != -1){
-                    FILE *file = fopen(sesion.direccion.data(),"r+b");
-
-                    if(file!=NULL){
-                        
-                        //Se lee superbloque
-                        SuperBloque super;
-                        fseek(file,sesion.superStart,SEEK_SET);
-                        fread(&super,sizeof(SuperBloque),1,file);
-
-                        //Se lee inodo de user.txt
-                        InodeTable inodo;
-                        fseek(file,super.s_inode_start + sizeof(InodeTable),SEEK_SET);
-                        fread(&inodo,sizeof(InodeTable),1,file);
-
-                        //Se lee el contenido de users.txt
-                        char content[1000] = "\0";
-                        for(int i = 0; i < 12; i++){
-                            if(inodo.i_block[i] != -1){
-                                BloqueArchivos archivo;
-                                fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
-                                fread(&archivo,sizeof(BloqueArchivos),1,file);
-                                strcat(content,archivo.b_content);
-                            }
+                    deleteGroup();
+                    cout<< "\u001B[32m" << "[OK] Grupo Eliminado Exitosamente"<< "\x1B[0m" << endl;
+                    if(sesion.sistemaType == 3){
+                        char content[64];
+                        char operacion[10];
+                        char path[10];
+                        for(int j=0;j<10;j++){
+                            path[j]='\0';
                         }
-                        //Se parsea el contenido
-                        string auxContent;
-                        char *endString;
-                        char *lineToken = strtok_r(content,"\n",&endString);
-
-                        while(lineToken != NULL){
-                            char id[2];
-                            char tipo[2];
-                            char group[15];
-                            char *auxLine;
-                            auxLine = static_cast<char*>(malloc(strlen(lineToken)+2));
-                            strcpy(auxLine, lineToken);
-                            strcat(auxLine,"\n"); 
-                            char *endToken;
-                            char *auxToken = strtok_r(lineToken,",",&endToken);
-                            strcpy(id,auxToken);
-                            
-                            if(strcmp(id,"0") != 0){
-                                auxToken = strtok_r(NULL,",",&endToken);
-                                strcpy(tipo,auxToken);
-                                if(strcmp(tipo,"G") == 0){
-                                    strcpy(group,endToken);
-                                    if(strcmp(group,name.data()) == 0){
-                                        //Se encontro el grupo
-                                        auxLine[0]='0';
-
-                                    }
-                                }
-                            }                          
-                            auxContent+=auxLine;
-                            lineToken = strtok_r(NULL,"\n",&endString);
-                        }
-                        
-                        //Se reescribe el users.txt
-                        for(int i = 0; i < 12; i++){
-                            if(inodo.i_block[i] != -1){
-                                BloqueArchivos *archivo = new BloqueArchivos;
-                                string auxString = "";
-                                for(int j = 0; j <= 64; j++){
-                                    if(i*64+j<auxContent.size()&&(int)auxContent.at(i*64+j)!=1){
-                                        auxString += auxContent.at(i*64+j);  
-                                    }                       
-                                }
-                                strcpy(archivo->b_content,auxString.data());
-                                fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
-                                fwrite(archivo,sizeof(BloqueArchivos),1,file);
-                            }
-                        }
-                        
-                        cout<< "\u001B[32m" << "[OK] Grupo Eliminado Exitosamente"<< "\x1B[0m" << endl;
-                        if(sesion.sistemaType == 3){
-                            char content[64];
-                            char operacion[10];
-                            char path[10];
-                            for(int j=0;j<10;j++){
-                                path[j]='\0';
-                            }
-                            strcpy(content,name.data());
-                            strcpy(operacion,"rmgrp");
-                            guardarJournal(operacion,path,content);
-                        }
-
-                        fclose(file);
+                        strcpy(content,name.data());
+                        strcpy(operacion,"rmgrp");
+                        guardarJournal(operacion,path,content);
                     }
                 }
                 else {
-                    cout<< "\u001B[31m" << "[BAD PARAM] El grupo que desea elimnar no existe"<< "\x1B[0m" << endl;
+                    cout<< "\u001B[31m" << "[BAD PARAM] El grupo que desea eliminar no existe"<< "\x1B[0m" << endl;
                 }
             }
             else{
@@ -274,4 +206,83 @@ void RMGRP_::guardarJournal(char* operacion,char *path,char *content){
     }
 
     
+}
+
+void RMGRP_::deleteGroup(){
+    FILE *file = fopen(sesion.direccion.data(),"r+b");
+
+    if(file!=NULL){
+        
+        //Se lee superbloque
+        SuperBloque super;
+        fseek(file,sesion.superStart,SEEK_SET);
+        fread(&super,sizeof(SuperBloque),1,file);
+
+        //Se lee inodo de user.txt
+        InodeTable inodo;
+        fseek(file,super.s_inode_start + sizeof(InodeTable),SEEK_SET);
+        fread(&inodo,sizeof(InodeTable),1,file);
+
+        //Se lee el contenido de users.txt
+        char content[1000] = "\0";
+        for(int i = 0; i < 12; i++){
+            if(inodo.i_block[i] != -1){
+                BloqueArchivos archivo;
+                fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
+                fread(&archivo,sizeof(BloqueArchivos),1,file);
+                strcat(content,archivo.b_content);
+            }
+        }
+        //Se parsea el contenido
+        string auxContent;
+        char *endString;
+        char *lineToken = strtok_r(content,"\n",&endString);
+
+        while(lineToken != NULL){
+            char id[2];
+            char tipo[2];
+            char group[15];
+            char *auxLine;
+            auxLine = static_cast<char*>(malloc(strlen(lineToken)+2));
+            strcpy(auxLine, lineToken);
+            strcat(auxLine,"\n"); 
+            char *endToken;
+            char *auxToken = strtok_r(lineToken,",",&endToken);
+            strcpy(id,auxToken);
+            
+            if(strcmp(id,"0") != 0){
+                auxToken = strtok_r(NULL,",",&endToken);
+                strcpy(tipo,auxToken);
+                if(strcmp(tipo,"G") == 0){
+                    strcpy(group,endToken);
+                    if(strcmp(group,name.data()) == 0){
+                        //Se encontro el grupo
+                        auxLine[0]='0';
+
+                    }
+                }
+            }                          
+            auxContent+=auxLine;
+            lineToken = strtok_r(NULL,"\n",&endString);
+        }
+        
+        //Se reescribe el users.txt
+        for(int i = 0; i < 12; i++){
+            if(inodo.i_block[i] != -1){
+                BloqueArchivos *archivo = new BloqueArchivos;
+                string auxString = "";
+                for(int j = 0; j <= 64; j++){
+                    if(i*64+j<auxContent.size()&&(int)auxContent.at(i*64+j)!=1){
+                        auxString += auxContent.at(i*64+j);  
+                    }                       
+                }
+                strcpy(archivo->b_content,auxString.data());
+                fseek(file,super.s_block_start + sizeof(BloqueArchivos)*inodo.i_block[i],SEEK_SET);
+                fwrite(archivo,sizeof(BloqueArchivos),1,file);
+            }
+        }
+
+        fclose(file);
+    }
+
 }

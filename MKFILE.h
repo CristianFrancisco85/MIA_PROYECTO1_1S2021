@@ -447,6 +447,38 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                         for(int j=0;j<64;j++){
                             archivo.b_content[j]='\0';
                         }
+
+                        if(size > 64){
+                            for(int j = 0; j < 64; j++){
+                                if(content.length() == 0){
+                                    archivo.b_content[j] = defaultContent[contentChar];
+                                    contentChar++;
+                                    if(contentChar == 10){
+                                        contentChar=0;
+                                    }
+                                }
+                                else{
+                                    archivo.b_content[j] = content[contentChar];
+                                    contentChar++;
+                                }
+                            }                               
+                            size = size - 64;
+                        }
+                        else{
+                            for (int j = 0; j < size; j++) {
+                                if(content.length() == 0){
+                                    archivo.b_content[j] = defaultContent[contentChar];
+                                    contentChar++;
+                                    if(contentChar == 10){
+                                        contentChar=0;
+                                    }
+                                }
+                                else{
+                                    archivo.b_content[j] = content[contentChar];
+                                    contentChar++;
+                                }
+                            }
+                        }
                         
                         //Apuntadores Directos
                         if(i<12){
@@ -456,37 +488,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             fseek(file,super.s_bm_block_start + bitBloque,SEEK_SET);
                             myChar='2';
                             fwrite(&myChar,sizeof(char),1,file);
-                            if(size > 64){
-                                for(int j = 0; j < 64; j++){
-                                    if(content.length() == 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar=0;
-                                        }
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                }                               
-                                size = size - 64;
-                            }
-                            else{
-                                for (int j = 0; j < size; j++) {
-                                    if(content.length() == 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar=0;
-                                        }
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;
-                                    }
-                                }
-                            }
+                            
                             //Se guarda bloque en el inodo
                             fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                             fread(&inodo,sizeof(InodeTable),1,file);
@@ -515,8 +517,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             fread(&inodo,sizeof(InodeTable),1,file);
                             inodo.i_block[i] = bitBloqueApuntadores;
                             fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
-                            fwrite(&inodo,sizeof(InodeTable),1,file);
-                            
+                            fwrite(&inodo,sizeof(InodeTable),1,file);                            
                             
                             //Se crea el bloque de apuntadores
                             int bitBloque = buscarBit(file,sesion.fit,'B');
@@ -530,39 +531,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*bitBloqueApuntadores,SEEK_SET);
                             fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                            //Se crean los bloques de archivos
-
-                            if(size > 64){
-                                for(int j = 0; j < 64; j++){
-                                    if(content.length() == 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar = 0;
-                                        }    
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;                                   
-                                    }
-                                }
-                                size -= 64;
-                            }
-                            else{
-                                for (int j = 0; j < size; j++) {
-                                    if(content.length() == 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar = 0;
-                                        }
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;   
-                                    }
-                                }
-                            }
                             //Se guarda el bloque
                             fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                             fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -576,8 +544,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             fread(&inodo,sizeof(InodeTable),1,file);
                             //Se lee bloque de apuntadores
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
-                            fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
-                            
+                            fread(&apuntadores,sizeof(BloqueApuntadores),1,file);                           
                             
                             int bitBloque = buscarBit(file,sesion.fit,'B');
                             //Se crean los bloques de archivos y se registran en el bitmap
@@ -595,39 +562,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             apuntadores.b_pointers[bloqueLibre] = bitBloque;
                             fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                             fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
-
                            
-                            if(size > 64){
-                                for(int j = 0; j < 64; j++){
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar = 0;
-                                        }
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;                                       
-                                    }
-                                }   
-                                size -= 64;
-                            }
-                            else{
-                                for (int j = 0; j < size; j++) {
-                                    if(content.length() != 0){
-                                        archivo.b_content[j] = defaultContent[contentChar];
-                                        contentChar++;
-                                        if(contentChar == 10){
-                                            contentChar = 0;
-                                        }
-                                    }
-                                    else{
-                                        archivo.b_content[j] = content[contentChar];
-                                        contentChar++;   
-                                    }
-                                }
-                            }
                             //Se guarda el bloque
                             fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                             fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -744,6 +679,38 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             for(int j=0;j<64;j++){
                                 archivo.b_content[j]='\0';
                             }
+
+                            if(size > 64){
+                                for(int j = 0; j < 64; j++){
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }                               
+                                size = size - 64;
+                            }
+                            else{
+                                for (int j = 0; j < size; j++) {
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }
+                            }
                             
                             //Apuntadores Directos
                             if(i<12){
@@ -753,37 +720,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_bm_block_start + bitBloque,SEEK_SET);
                                 myChar='2';
                                 fwrite(&myChar,sizeof(char),1,file);
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }                               
-                                    size = size - 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }
-                                }
+                                
                                 //Se guarda bloque en el inodo
                                 fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                                 fread(&inodo,sizeof(InodeTable),1,file);
@@ -827,39 +764,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*bitBloqueApuntadores,SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                                //Se crean los bloques de archivos
-
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -893,38 +797,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                            
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }   
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -1014,6 +886,38 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             for(int j=0;j<64;j++){
                                 archivo.b_content[j]='\0';
                             }
+
+                            if(size > 64){
+                                for(int j = 0; j < 64; j++){
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }                               
+                                size = size - 64;
+                            }
+                            else{
+                                for (int j = 0; j < size; j++) {
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }
+                            }
                             
                             //Apuntadores Directos
                             if(i<12){
@@ -1023,37 +927,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_bm_block_start + bitBloque,SEEK_SET);
                                 myChar='2';
                                 fwrite(&myChar,sizeof(char),1,file);
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }                               
-                                    size = size - 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }
-                                }
+                                
                                 //Se guarda bloque en el inodo
                                 fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                                 fread(&inodo,sizeof(InodeTable),1,file);
@@ -1097,39 +971,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*bitBloqueApuntadores,SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                                //Se crean los bloques de archivos
-
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -1162,38 +1003,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                            
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }   
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -1274,6 +1083,38 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                             for(int j=0;j<64;j++){
                                 archivo.b_content[j]='\0';
                             }
+
+                            if(size > 64){
+                                for(int j = 0; j < 64; j++){
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }                               
+                                size = size - 64;
+                            }
+                            else{
+                                for (int j = 0; j < size; j++) {
+                                    if(content.length() == 0){
+                                        archivo.b_content[j] = defaultContent[contentChar];
+                                        contentChar++;
+                                        if(contentChar == 10){
+                                            contentChar=0;
+                                        }
+                                    }
+                                    else{
+                                        archivo.b_content[j] = content[contentChar];
+                                        contentChar++;
+                                    }
+                                }
+                            }
                             
                             //Apuntadores Directos
                             if(i<12){
@@ -1283,37 +1124,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_bm_block_start + bitBloque,SEEK_SET);
                                 myChar='2';
                                 fwrite(&myChar,sizeof(char),1,file);
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }                               
-                                    size = size - 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar=0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;
-                                        }
-                                    }
-                                }
+                                
                                 //Se guarda bloque en el inodo
                                 fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                                 fread(&inodo,sizeof(InodeTable),1,file);
@@ -1357,39 +1168,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*bitBloqueApuntadores,SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
 
-                                //Se crean los bloques de archivos
-
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
@@ -1422,39 +1200,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                                 apuntadores.b_pointers[bloqueLibre] = bitBloque;
                                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[12],SEEK_SET);
                                 fwrite(&apuntadores,sizeof(BloqueApuntadores),1,file);
-
-                            
-                                if(size > 64){
-                                    for(int j = 0; j < 64; j++){
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;                                       
-                                        }
-                                    }   
-                                    size -= 64;
-                                }
-                                else{
-                                    for (int j = 0; j < size; j++) {
-                                        if(content.length() == 0){
-                                            archivo.b_content[j] = defaultContent[contentChar];
-                                            contentChar++;
-                                            if(contentChar == 10){
-                                                contentChar = 0;
-                                            }
-                                        }
-                                        else{
-                                            archivo.b_content[j] = content[contentChar];
-                                            contentChar++;   
-                                        }
-                                    }
-                                }
+                   
                                 //Se guarda el bloque
                                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*bitBloque,SEEK_SET);
                                 fwrite(&archivo,sizeof(BloqueArchivos),1,file);
