@@ -27,7 +27,7 @@ private:
     string path;//Ruta con nombre del reporte a generar
     char *id;//ID de la particion
     bool statusFlag;//Indica si hay errores en el comando
-    char *ruta; // Ruta del disco
+    string ruta; // Ruta del archivo o carpeta dentro del sistema de archivos
 
 public:
     /**
@@ -57,6 +57,12 @@ public:
      * @param path: Ruta con nombre del reporte a generar
     */
     void setPath(char* path);
+
+    /**
+     * Setter del la ruta
+     * @param path: Ruta del archivo o capreta dentro del sistema de archivos
+    */
+    void setRuta(char* path);
 
     /*
      * Getter del ID
@@ -129,6 +135,11 @@ public:
     void reportTree();
 
     /**
+     * Reporte del contenido de un archivo
+    */
+    void reportFile();
+
+    /**
      * Reporte del Journaling
     */
     void reportJournaling();
@@ -143,6 +154,15 @@ public:
     */
     bool isMounted();
 
+    /**
+     * Verifica si existe una carpeta o archivo 
+     * @param file = Stream del disco 
+     * @param path = Path de la carpeta o archivo
+     * @param superStart = Inicio del superbloque
+     * @return Numero de inodo o -1 si no existe
+    */
+    int buscarCarpetaArchivo(FILE *file, char* path,int superStart);
+
 };
 
 extern list<MOUNT_> *mounted;
@@ -156,6 +176,10 @@ void REP_::setPath(char *value){
     if(path[0] == '\"'){
         path = path.substr(1, path.size()-2);
     }  
+}
+
+void REP_::setRuta(char *value){
+    this->ruta=value;
 }
 
 void REP_::setId(char *value){
@@ -177,9 +201,6 @@ char* REP_::getName(){
     return  this->name;
 }
 
-char* REP_::getRuta(){
-    return  this->ruta;
-}
 
 void REP_::setStatus(){
 
@@ -241,39 +262,32 @@ void REP_::initRep(){
         else if(strcmp(this->getName(),"tree")==0){
             reportTree();
         }
+        else if(strcmp(this->getName(),"file")==0){
+            reportFile();
+        }
     }
 }
-
 
 
 //Metodos de reportes
 
 void REP_::reportMBR(){
-
+    string diskPath;
     //Se busca particion y su ruta
     list<MOUNT_>::iterator i;
     for(i=mounted->begin(); i != mounted->end(); i++){
         if(i->getId() == this->id){
             char aux[300];
             strcpy(aux,i->getPath().c_str());
-            this->ruta =aux;
+            diskPath =aux;
             break;
         }
     }
 
-    string diskPath = this->getRuta();
     FILE *file;
     file=fopen(diskPath.c_str(),"rb+");
     if(file != NULL){
 
-        string dotCode = "digraph{\n";
-        dotCode+= "MBR_TABLE[\n";
-        dotCode+= "shape=none;label=<\n";
-        dotCode+= "<TABLE width='600' height= '1000' cellspacing='-1' cellborder='1'>\n";
-        dotCode+= "<tr>\n";
-        dotCode+= "<td width='300'>Nombre</td><td width='300'>Valor</td>";
-        dotCode +="</tr>";
-        
         //Se lee el MBR
         MBR master;
         fseek(file,0,SEEK_SET);
@@ -284,6 +298,14 @@ void REP_::reportMBR(){
         mbr_partitions[2]=&master.mbr_partition_3;
         mbr_partitions[3]=&master.mbr_partition_4;
 
+        string dotCode = "digraph{\n";
+        dotCode+= "MBR_TABLE[\n";
+        dotCode+= "shape=none;label=<\n";
+        dotCode+= "<table width='300' height= '1000' cellspacing='-1' cellborder='1'>\n";
+        dotCode+= "<tr>\n";
+        dotCode+= "<td width='200'>Nombre</td><td width='100'>Valor</td>";
+        dotCode +="</tr>";
+               
         //Se escribe Tamaño
         dotCode += "<tr>";
         dotCode += "<td>mbr_tamaño</td>";
@@ -368,7 +390,7 @@ void REP_::reportMBR(){
             }
         }
         
-        dotCode += "</TABLE>\n>];\n";
+        dotCode += "</table>\n>];\n";
 
         //Si hay EBR para graficar
         if(extIndex != -1){
@@ -380,11 +402,11 @@ void REP_::reportMBR(){
 
                 if(ebr.part_status != '1'){
 
-                    dotCode += "subgraph cluster_"+to_string(ebrIndex);
-                    dotCode += "{\n label=\"EBR_"+to_string(ebrIndex)+"\"\n ";
+                    dotCode += "subgraph cluster_"+to_string(ebrIndex)+"{\n ";
+                    dotCode += "label=\"EBR_"+to_string(ebrIndex)+"\" \n";
                     dotCode += "table_"+to_string(ebrIndex)+"[shape=box, label=<\n ";
                     
-                    dotCode += "<TABLE width='400' height='200' cellspacing='-1' cellborder='1'>\n";
+                    dotCode += "<table width='400' height='200' cellspacing='-1' cellborder='1'>\n";
                     dotCode += "<tr>";
                     dotCode +="<td width='200'>Nombre</td><td width='200'>Valor</td>";
                     dotCode +="</tr>\n";
@@ -428,7 +450,7 @@ void REP_::reportMBR(){
                     dotCode += ebr.part_name;
                     dotCode += "</td>";
                     dotCode += "</tr>\n";
-                    dotCode += "</TABLE>\n>];\n}";
+                    dotCode += "</table>\n>];\n}";
 
                     ebrIndex++;
                 }
@@ -502,23 +524,24 @@ void REP_::reportMBR(){
 }
 
 void REP_::reportDisk(){
+    string diskPath;
     //Se busca particion y su ruta
     list<MOUNT_>::iterator i;
     for(i=mounted->begin(); i != mounted->end(); i++){
         if(i->getId() == this->id){
             char aux[255];
             strcpy(aux,i->getPath().c_str());
-            this->ruta =aux;
+            diskPath =aux;
             break;
         }
     }
-    string diskPath = this->getRuta();
+
     FILE *file;
     if((file = fopen(diskPath.c_str(),"r"))){
         string dotCode ="digraph G{\n";
         dotCode+= "DiskTable[\n";
         dotCode+= "shape=box;label=<\n";
-        dotCode+= "<TABLE border='0' cellborder='2' width='500' height='200'>\n";
+        dotCode+= "<table border='0' cellborder='2' width='500' height='200'>\n";
         dotCode+= "<tr>\n";
         dotCode+= "<td height='180' width='100'> MBR </td>\n";
 
@@ -541,31 +564,32 @@ void REP_::reportDisk(){
                 
                 if(mbr_partitions[i]->part_status != '1'){
                     if(mbr_partitions[i]->part_type == 'P'){
-                        dotCode+=  "<td height='180' width='200'> Primaria<br/>"+to_string(usedSpace)+"% del disco</td>\n";
+                        dotCode+=  "<td height='180' width='200'> Primaria <br/>"+to_string(usedSpace)+"% del disco</td>\n";
                         //Se verifica si no hay espacio libre
                         int partEnd = mbr_partitions[i]->part_start + mbr_partitions[i]->part_size;
                         if(i!=3){
-                            int exact = mbr_partitions[i+1]->part_start;
-                            if(mbr_partitions[i+1]->part_start != -1){
-                                if((exact-partEnd)!=0){
-                                    double aux =  (exact-partEnd)*100;
-                                    aux = aux/master.mbr_tamano;
-                                    aux = (aux*500)/100;
-                                    dotCode+= "<td height='120' width='"+to_string(aux)+"'>LIBRE<br/>"+"% del disco</td>\n";
-                                }
+                            double aux;
+                            aux = mbr_partitions[i+1]->part_start - partEnd;
+
+                            if(mbr_partitions[i+1]->part_start != -1 && aux!=0 ){
+                                aux =  aux*100;
+                                aux = aux/master.mbr_tamano;
+                                aux = (aux*500)/100;
+                                dotCode+= "<td height='120' width='"+to_string(aux)+"'>LIBRE<br/>"+"% del disco</td>\n";
                             }
                         }
                         else{
-                            if((master.mbr_tamano + (int)sizeof(MBR)-partEnd)!=0){
-                                double freeSpace = (master.mbr_tamano + (int)sizeof(MBR) - partEnd) + sizeof(MBR);
-                                freeSpace = (freeSpace*100)/master.mbr_tamano;
-                                dotCode+=  "<td height='120' width='"+to_string(freeSpace*4)+"'>Libre<br/>"+to_string(freeSpace)+"% del disco</td>\n";
+                            double aux;
+                            aux = master.mbr_tamano + (int)sizeof(MBR) - partEnd;
+                            if(aux!=0){
+                                aux = (aux*100)/master.mbr_tamano;
+                                dotCode+=  "<td height='120' width='"+to_string(aux*4)+"'>Libre<br/>"+to_string(aux)+"% del disco</td>\n";
                             }
                         }
                     }
                     else{    
                         dotCode+= "<td height='200' width='100'>\n";
-                        dotCode+= "<TABLE border='0'  height='180' width='100' cellborder='1'>\n";
+                        dotCode+= "<table border='0'  height='180' width='100' cellborder='1'>\n";
                         dotCode+= "<tr>";
                         dotCode +="<td height='60' colspan='15'>Extendida</td>  ";
                         dotCode +="</tr>\n";
@@ -607,7 +631,7 @@ void REP_::reportDisk(){
                             dotCode+= "<td height='120'>"+to_string(usedSpace)+"% del disco </td>";
                         }
                         dotCode += "</tr>\n";
-                        dotCode += "</TABLE>\n";
+                        dotCode += "</table>\n";
                         dotCode += "</td>\n";
 
                         if(i==3){
@@ -638,7 +662,7 @@ void REP_::reportDisk(){
                 }
             }
         }
-        dotCode+= "</tr>\n</TABLE>\n>];\n}";
+        dotCode+= "</tr>\n</table>\n>];\n}";
         fclose(file);
 
         // Obtener la ruta.
@@ -735,10 +759,9 @@ void REP_::reportInode(){
 
         for(int i=0;bitMapStart < super.s_bm_block_start;i++){
             fseek(file,super.s_bm_inode_start + i,SEEK_SET);
-            char myBit;
-            myBit = fgetc(file);
             //Si el inodo se esta utilizando
-            if(myBit == '1'){
+            if(fgetc(file) == '1'){
+
                 fseek(file,super.s_inode_start + sizeof(InodeTable)*i,SEEK_SET);
                 fread(&auxInodo,sizeof(InodeTable),1,file);
 
@@ -750,15 +773,18 @@ void REP_::reportInode(){
                 dotCode += "</tr>\n";
 
                 dotCode += "<tr>";
-                dotCode += "<td> i_uid </td> <td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "<td> i_uid </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_gid)+"</td>";
                 dotCode += "</tr>\n";
 
                 dotCode += "<tr>";
-                dotCode += "<td> i_gid </td> <td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "<td> i_gid </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_gid)+"</td>";
                 dotCode += "</tr>\n";
                 
                 dotCode += "<tr>";
-                dotCode += "<td> i_size </td> <td> "+to_string(auxInodo.i_size)+"</td>";
+                dotCode += "<td> i_size </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_size)+"</td>";
                 dotCode += "</tr>\n";
 
                 struct tm *timeStruct;
@@ -799,6 +825,7 @@ void REP_::reportInode(){
                 dotCode += auxInodo.i_type;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
+
                 dotCode += "<tr>";
                 dotCode += "<td> i_perm </td>";
                 dotCode += "<td>"+to_string(auxInodo.i_perm)+"</td>";
@@ -1024,7 +1051,7 @@ void REP_::reportBloque(){
                 BloqueCarpetas carpetas;
                 fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*i,SEEK_SET);
                 fread(&carpetas,sizeof(BloqueCarpetas),1,file);
-                dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
+                dotCode += "bloque_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
 
                 dotCode += "<tr>";
@@ -1034,7 +1061,8 @@ void REP_::reportBloque(){
                 dotCode +=" </tr>\n";
 
                 dotCode += "<tr>";
-                dotCode += "<td> b_name </td><td> b_inodo </td>";
+                dotCode += "<td> b_name </td>";
+                dotCode += "<td> b_inodo </td>";
                 dotCode += "</tr>\n";
 
                 for(int j = 0;j < 4;j++){
@@ -1051,7 +1079,7 @@ void REP_::reportBloque(){
                 BloqueArchivos archivos;
                 fseek(file,super.s_block_start + sizeof(BloqueArchivos)*i,SEEK_SET);
                 fread(&archivos,sizeof(BloqueArchivos),1,file);
-                dotCode += "nodo_"+to_string(i) + "[shape=none,label=< \n";
+                dotCode += "bloque_"+to_string(i) + "[shape=none,label=< \n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
 
                 dotCode += "<tr>";
@@ -1072,7 +1100,7 @@ void REP_::reportBloque(){
                 fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*i,SEEK_SET);
                 fread(&apuntadores,sizeof(BloqueApuntadores),1,file);
                 dotCode += "bloque_"+to_string(i)+" [shape=plaintext,label=< \n";
-                dotCode += "<table border='0'>\n";
+                dotCode += "<table border='0' cellborder='1' cellspacing='0' >\n";
                 dotCode += "<tr>";
                 dotCode += "<td><b>Bloque de Apuntadores "+to_string(i)+"</b></td>";
                 dotCode += "</tr>\n";
@@ -1497,7 +1525,7 @@ void REP_::reportSuperBloque(){
         fread(&super,sizeof (super),1,file);
 
         string dotCode = "digraph G{\n";
-        dotCode += "superBloqueTable[shape=none,label=<";
+        dotCode += "SuperBloqueTable[shape=none,label=<";
         dotCode += "<table border='0' cellborder='1' cellspacing='0'>\n";
 
         dotCode += "<tr>";
@@ -1842,14 +1870,13 @@ void REP_::reportTree(){
 
         int i = 0;
         int aux = super.s_bm_inode_start;
-        int linkInt;
         char myChar;
 
         string dotCode="";
         dotCode += "digraph G{\n rankdir=\"LR\"\n";
 
         while(aux < super.s_bm_block_start){
-            linkInt = 0;
+
             fseek(file,super.s_bm_inode_start + i,SEEK_SET);
             myChar = fgetc(file);
             aux++;
@@ -1914,14 +1941,13 @@ void REP_::reportTree(){
                 dotCode += "</tr>\n";
 
                 for(int j = 0; j < 15; j++){
-                    //AQUI
                     dotCode += "<tr>";
                     dotCode += "<td> i_block_";
-                    dotCode += to_string(linkInt)+"</td><td port=\"f";
+                    dotCode += to_string(j)+"</td><td port=\"link_";
                     dotCode += to_string(j)+"\"> "+to_string(inodo.i_block[j])+" </td>";
                     dotCode +="</tr>\n";
-                    linkInt++;
                 }
+
                 dotCode += "<tr>";
                 dotCode +="<td> i_type </td>";
                 dotCode +="<td> ";
@@ -1936,7 +1962,7 @@ void REP_::reportTree(){
                 dotCode += "</table>>]\n";
 
                 for (int j = 0; j < 15; j++){
-                    linkInt = 0;
+
                     if(inodo.i_block[j] != -1){
                         fseek(file,super.s_bm_block_start + inodo.i_block[j],SEEK_SET);
                         myChar = fgetc(file);
@@ -1959,20 +1985,17 @@ void REP_::reportTree(){
                                 dotCode += "<tr>";
                                 dotCode +="<td> ";
                                 dotCode += carpetasBlock.b_content[m].b_name;
-                                //AQUI
                                 dotCode += "</td>";
-                                dotCode +="<td port=\"f"+to_string(linkInt)+"\"> ";
+                                dotCode +="<td port=\"link_"+to_string(m)+"\"> ";
                                 dotCode += to_string(carpetasBlock.b_content[m].b_inodo);
                                 dotCode += "</td>";
                                 dotCode +="</tr>\n";
-                                linkInt++;
                             }
                             dotCode += "</table>>]\n";
                             for(int m = 0; m < 4; m++){
                                 if(carpetasBlock.b_content[m].b_inodo !=-1){
                                     if(strcmp(carpetasBlock.b_content[m].b_name,".")!=0 && strcmp(carpetasBlock.b_content[m].b_name,"..")!=0){
-                                        //AQUI
-                                        dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(m);
+                                        dotCode += "bloque_"+to_string(inodo.i_block[j])+":link_"+to_string(m);
                                         dotCode += " -> inodo_"+to_string(carpetasBlock.b_content[m].b_inodo)+";\n";
                                     }
                                 }
@@ -2006,16 +2029,13 @@ void REP_::reportTree(){
                             dotCode += "<td bgcolor=\"gold\" ><b>Bloque de Apuntadores "+to_string(inodo.i_block[j])+"</b></td>";
                             dotCode += "</tr>\n";
                             for(int m = 0; m < 16; m++){
-                                //AQUI
                                 dotCode += "<tr>";
-                                dotCode +="<td port=\"f"+to_string(linkInt)+"\">";
+                                dotCode +="<td port=\"link_"+to_string(m)+"\">";
                                 dotCode += to_string(apuntadoresBlock.b_pointers[m])+"</td>";
                                 dotCode +="</tr>\n";
-                                linkInt++;
                             }
                             dotCode += "</table>>]\n";
                             for (int m = 0; m < 16; m++) {
-                                linkInt = 0;
                                 if(apuntadoresBlock.b_pointers[m] != -1){
                                     fseek(file,super.s_bm_block_start + apuntadoresBlock.b_pointers[m],SEEK_SET);
                                     myChar = fgetc(file);
@@ -2037,18 +2057,15 @@ void REP_::reportTree(){
                                             dotCode += "<tr>";
                                             dotCode += "<td> ";
                                             dotCode += carpetasBlock.b_content[n].b_name;
-                                            //AQUI
-                                            dotCode += "</td><td port=\"f"+to_string(linkInt)+"\"> ";
+                                            dotCode += "</td><td port=\"link_"+to_string(n)+"\"> ";
                                             dotCode += to_string(carpetasBlock.b_content[n].b_inodo)+"</td>";
                                             dotCode += "</tr>\n";
-                                            linkInt++;
                                         }
                                         dotCode += "</table>>]\n";
                                         for(int n = 0; n < 4; n++){
                                             if(carpetasBlock.b_content[n].b_inodo !=-1){
                                                 if(strcmp(carpetasBlock.b_content[n].b_name,"-")!=0){
-                                                    //AQUI
-                                                    dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m])+":f"+to_string(n);
+                                                    dotCode += "bloque_"+to_string(apuntadoresBlock.b_pointers[m])+":link_"+to_string(n);
                                                     dotCode += " -> inodo_"+to_string(carpetasBlock.b_content[n].b_inodo)+";\n";
                                                 }
                                             }
@@ -2076,17 +2093,14 @@ void REP_::reportTree(){
                                 }
                             }
 
-                            for(int b = 0; b < 16; b++){
-                                if(apuntadoresBlock.b_pointers[b] != -1){
-                                    //AQUI
-                                    dotCode += "bloque_"+to_string(inodo.i_block[j])+":f"+to_string(b);
-                                    dotCode += " -> bloque_"+to_string(apuntadoresBlock.b_pointers[b])+";\n";
-                                }
-                                    
+                            for(int m = 0; m < 16; m++){
+                                if(apuntadoresBlock.b_pointers[m] != -1){
+                                    dotCode += "bloque_"+to_string(inodo.i_block[j])+":link_"+to_string(m);
+                                    dotCode += " -> bloque_"+to_string(apuntadoresBlock.b_pointers[m])+";\n";
+                                }                                   
                             }
                         }
-                        //AQUI
-                        dotCode += "inodo_"+to_string(i)+":f"+to_string(j);
+                        dotCode += "inodo_"+to_string(i)+":link_"+to_string(j);
                         dotCode += " -> bloque_"+to_string(inodo.i_block[j])+"; \n";
                     }
                 }
@@ -2143,7 +2157,7 @@ void REP_::reportTree(){
         //Se elimina archivo de residuo
         comando = "sudo rm '";
         comando += auxPath2 + "\'";
-        //system(comando.c_str());
+        system(comando.c_str());
         this_thread::sleep_for(chrono::milliseconds(1000));
         cout<< "\u001B[32m" << "[OK] Reporte de Arbol creado exitosamente"<< "\x1B[0m" << endl;
     
@@ -2297,3 +2311,258 @@ void REP_::reportJournaling(){
     }
 }
 
+void REP_::reportFile(){
+    //Se busca en las particiones montadas
+    int partIndex = -1;
+    MOUNT_ *disk;
+    list<MOUNT_>::iterator i;
+    for(i=mounted->begin(); i != mounted->end(); i++){
+        if(i->getId() == this->id){
+            disk = &*i;
+            break;
+        }
+    }
+
+    partIndex = disk->findPartitionIndex();
+
+    if(partIndex!= -1){
+
+        MBR master;
+        FILE *file = fopen(disk->getPath().data(),"r+b");
+        fread(&master,sizeof(MBR),1,file);
+        Partition *mbr_partitions[4];
+        mbr_partitions[0]=&master.mbr_partition_1;
+        mbr_partitions[1]=&master.mbr_partition_2;
+        mbr_partitions[2]=&master.mbr_partition_3;
+        mbr_partitions[3]=&master.mbr_partition_4;
+
+        int superStart =mbr_partitions[partIndex]->part_start;
+
+        char auxRuta[255];
+        strcpy(auxRuta,this->ruta.c_str());
+        int inodoNum = buscarCarpetaArchivo(file,auxRuta,superStart);
+        if(inodoNum != -1){
+            
+            SuperBloque super;
+            InodeTable inodo;
+            fseek(file,superStart,SEEK_SET);
+            fread(&super,sizeof(SuperBloque),1,file);
+            fseek(file,super.s_inode_start + sizeof(InodeTable)*inodoNum,SEEK_SET);
+            fread(&inodo,sizeof(InodeTable),1,file);
+
+            string dotCode= "digraph G{\n";
+            dotCode += "nodo [shape=none label=<";
+            dotCode += "<table border='0' cellborder='1' cellspacing='0'>";
+
+            dotCode += "<tr>";
+            dotCode += "<td align=\"left\" bgcolor=\"dodgerblue\"> <b>"+this->ruta+"</b> </td>";
+            dotCode += "</tr>\n";
+
+            dotCode += "<tr>";
+            dotCode += "<td> ";
+
+            BloqueArchivos archivo;
+            for (int i = 0; i < 15; i++) {
+                if(inodo.i_block[i] != -1){
+                    //Apuntador Directo
+                    if(i<12){
+                        fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[i],SEEK_SET);
+                        fread(&archivo,sizeof(BloqueArchivos),1,file);
+                        char myChar[70];
+                        for(int j=0;j<64;j++){
+                            myChar[j]='\0';
+                            myChar[j]=archivo.b_content[j];
+                        }
+                        dotCode += myChar;
+                        dotCode += "<br/>";
+                    }
+                    //Apuntador indirecto simple
+                    if(i == 12){
+                        BloqueApuntadores apuntador;
+                        fseek(file,super.s_block_start + sizeof(BloqueApuntadores)*inodo.i_block[i],SEEK_SET);
+                        fread(&apuntador,sizeof(BloqueApuntadores),1,file);
+                        for(int j = 0; j < 16; j++){
+                            if(apuntador.b_pointers[j] != -1){
+                                fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*apuntador.b_pointers[j],SEEK_SET);
+                                fread(&archivo,sizeof(BloqueArchivos),1,file);
+                                for(int j=0;j<64;j++){
+                                    dotCode += archivo.b_content[j];
+                                }
+                                dotCode +="<br/>";
+                            }
+                        }
+                    }
+                }
+            }
+            dotCode += "</td>";
+            dotCode += "</tr>\n";
+            dotCode +="</table>>]\n";
+            dotCode +="\n}";
+            fclose(file);
+
+            //Obtener la ruta.
+            string pathSinExt = this->path;
+            string extension;
+            const size_t lastPoint = pathSinExt.find_last_of(".");
+            if (string::npos != lastPoint){
+                extension = pathSinExt.substr(lastPoint, pathSinExt.length());
+                pathSinExt = pathSinExt.substr(0, lastPoint);
+            }
+            string auxPath2 = pathSinExt;
+            auxPath2 += ".txt";
+
+            string pathSinName = this->path;
+            const size_t lastSlash = pathSinName.find_last_of("/");
+            if (string::npos != lastSlash){
+                pathSinName = pathSinExt.substr(0, lastSlash);
+            }
+
+            string comando;
+
+            //Se crea carpeta si se necesita
+            comando= "sudo mkdir -p \'";
+            comando+= pathSinName;
+            comando+= '\'';
+            system(comando.c_str());
+
+            //Se conceden permisos
+            comando = "sudo chmod -R 777 \'";
+            comando+= pathSinName;
+            comando += '\'';
+            system(comando.c_str());
+
+            // Se crea el .dot
+            FILE *dotFile = fopen(auxPath2.c_str(),"w+");
+            freopen(NULL,"w+",dotFile);
+            char charArr[dotCode.length()];
+            strcpy(charArr,dotCode.c_str());
+            fprintf(dotFile,"%s\n",charArr);
+            fclose(dotFile);
+            comando = "dot \'";
+            comando += auxPath2;
+            comando +="\' -o \'" + pathSinExt + extension + " \' -T" + extension.substr(1,extension.length()-1);
+            this_thread::sleep_for(chrono::milliseconds(1000));
+            system(comando.c_str());
+            this_thread::sleep_for(chrono::milliseconds(1000));
+            //Se elimina archivo de residuo
+            comando = "sudo rm '";
+            comando += auxPath2 + "\'";
+            //system(comando.c_str());
+            this_thread::sleep_for(chrono::milliseconds(1000));
+            cout<< "\u001B[32m" << "[OK] Reporte File creado exitosamente"<< "\x1B[0m" << endl;
+        }
+        else{
+            cout<< "\u001B[31m" << "[BAD PARAM] El archivo para el reporte FILE no existe en el sitemas de archivos"<< "\x1B[0m" << endl; 
+        }
+
+    }
+    else{
+        partIndex = disk->findLogicPartitionStart();
+        if(partIndex!=-1){
+
+        }
+    }
+}
+
+int REP_::buscarCarpetaArchivo(FILE *file, char* path,int superStart){
+
+    int cont = 0;
+    int byteInodo = 0;
+    list<string> lista = list<string>();
+    char *token = strtok(path,"/");
+    
+
+    while(token != NULL){
+        lista.push_back(token);
+        token = strtok(NULL,"/");
+        cont++;
+    }
+
+    SuperBloque super;
+    fseek(file,superStart,SEEK_SET);
+    fread(&super,sizeof(SuperBloque),1,file);
+    byteInodo = super.s_inode_start;
+  
+    for (int i = 0; i < cont; i++) {
+       
+        fseek(file,byteInodo,SEEK_SET);
+        InodeTable inodo;
+        fread(&inodo,sizeof(InodeTable),1,file);
+
+        bool flag = false;
+
+        for(int j = 0; j < 15; j++){
+            if(inodo.i_block[j] != -1){
+
+                int byteBloque = super.s_block_start + sizeof(BloqueCarpetas)*inodo.i_block[j];
+                string auxString="";
+                fseek(file,byteBloque,SEEK_SET);
+
+                BloqueCarpetas carpeta;
+                //Apuntadores directos
+                if(j < 12){
+                    
+                    fread(&carpeta,sizeof(BloqueCarpetas),1,file);
+                    for (int m = 0; m < 4; m++) {
+
+                        list<string>::iterator iterador = lista.begin();
+                        for(int it=0; it<i; it++){
+                            iterador++;
+                        }
+                        auxString = *iterador;
+
+                        if( (i == cont - 1) && (strcmp(carpeta.b_content[m].b_name,auxString.c_str()) == 0)){
+                            return carpeta.b_content[m].b_inodo;
+                        }
+                        else if( (i != cont - 1) && (strcmp(carpeta.b_content[m].b_name,auxString.c_str()) == 0)){
+                            byteInodo = super.s_inode_start + sizeof(InodeTable)*carpeta.b_content[m].b_inodo;
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+                //Apuntador indirecto
+                else if(j == 12){
+
+                    BloqueApuntadores apuntador;
+                    fread(&apuntador,sizeof(BloqueApuntadores),1,file);
+                    for(int m = 0; m < 16; m++){
+                        if(apuntador.b_pointers[m] != -1){
+
+                            byteBloque = super.s_block_start + sizeof(BloqueCarpetas)*apuntador.b_pointers[m];
+                            fseek(file,byteBloque,SEEK_SET);
+                            fread(&carpeta,sizeof(BloqueCarpetas),1,file);
+
+                            for (int m = 0; m < 4; m++) {
+
+                                list<string>::iterator iterador = lista.begin();
+                                for(int it=0; it<i; it++){
+                                    it++;
+                                }
+                                auxString = *iterador;
+
+                                if((i == cont - 1) && (strcmp(carpeta.b_content[m].b_name,auxString.c_str()) == 0)){
+                                    return carpeta.b_content[m].b_inodo;
+                                }
+                                else if((i != cont - 1) && (strcmp(carpeta.b_content[m].b_name,auxString.c_str()) == 0)){
+                                    byteInodo = super.s_inode_start + sizeof(InodeTable)*carpeta.b_content[m].b_inodo;
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                            if(flag){
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if(flag){
+                    break;
+                }
+            }
+        }
+    }
+
+    return -1;
+}

@@ -270,6 +270,7 @@ int MOUNT_::findLogicPartitionStart(){
         int extendedIndex = -1;
         //Se lee el MBR
         MBR master;
+        EBR ebr;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
         Partition *mbr_partitions[4];
@@ -288,14 +289,12 @@ int MOUNT_::findLogicPartitionStart(){
         //Si existe un particion extendida
         if(extendedIndex != -1){
             //Se lee Extended Boot Record
-            EBR ebr;
-            fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
-            fread(&ebr,sizeof (EBR),1,file);
             fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
             
             //se busca la particion logica
             while(fread(&ebr,sizeof(EBR),1,file)!=0){
-
+                
+                fseek(file,ebr.part_next,SEEK_SET);
                 if(strcmp(this->name.c_str(),ebr.part_name) == 0){
                     //Retorna el inicio del EBR de la particion logica encontrada
                     int aux= ftell(file);
@@ -306,10 +305,7 @@ int MOUNT_::findLogicPartitionStart(){
                 if(ebr.part_next == -1){
                     break;
                 }
-                //Se pasa al siguiente EBR
-                else {
-                    fseek(file,ebr.part_next,SEEK_SET);
-                }
+
             }
         }
         fclose(file);

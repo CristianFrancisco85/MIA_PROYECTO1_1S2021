@@ -57,6 +57,10 @@ loss -id=971a
 pause
 recovery -id=971a
 
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
+#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
 rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteUsers.jpg -ruta=/users.txt -name=file
+
+
+
 

@@ -65,6 +65,7 @@ id ([a-zA-Z]|[0-9]|"_")*
 "sb" {yylval.STRING = strdup(yytext);return (sb);};
 "journaling" {yylval.STRING = strdup(yytext);return (journaling);};
 "tree" {yylval.STRING = strdup(yytext);return (tree);};
+"file" {yylval.STRING = strdup(yytext);return (file_);};
 
 "2fs" {yylval.STRING = strdup(yytext);return (_2fs);};
 "3fs" {yylval.STRING = strdup(yytext);return (_3fs);};
@@ -83,7 +84,7 @@ id ([a-zA-Z]|[0-9]|"_")*
 "mkdir" {yylval.STRING = strdup(yytext);return (mkdir);};
 "loss" {yylval.STRING = strdup(yytext);return (loss);};
 "recovery" {yylval.STRING = strdup(yytext);return (recovery);};
-
+"ruta" {yylval.STRING = strdup(yytext);return (ruta_);};
 
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};

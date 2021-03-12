@@ -115,6 +115,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> mkdir
 %token<STRING> loss
 %token<STRING> recovery
+%token<STRING> ruta_
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -126,6 +127,7 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> sb
 %token<STRING> journaling
 %token<STRING> tree
+%token<STRING> file_
 
 %token<STRING> _2fs
 %token<STRING> _3fs
@@ -332,6 +334,9 @@ REPPARAM:
     | guion name igual sb {rep_->setName($4);}
     | guion name igual journaling {rep_->setName($4);}
     | guion name igual tree {rep_->setName($4);}
+    | guion name igual file_ {rep_->setName($4);}
+    | guion ruta_ igual ruta {rep_->setRuta($4);}
+    | guion ruta_ igual cadena {rep_->setRuta($4);}
 ;
 
 MKFS: 

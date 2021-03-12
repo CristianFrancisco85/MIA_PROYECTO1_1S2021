@@ -305,6 +305,7 @@ char LOGIN_::getLogicPartFit(string path){
     if(file != NULL){
         int extendedIndex = -1;
         MBR master;
+        EBR ebr;
         fseek(file,0,SEEK_SET);
         fread(&master,sizeof(MBR),1,file);
 
@@ -321,9 +322,11 @@ char LOGIN_::getLogicPartFit(string path){
             }
         }
         if(extendedIndex != -1){
-            EBR ebr;
+            
             fseek(file, mbr_partitions[extendedIndex]->part_start,SEEK_SET);
-            while(fread(&ebr,sizeof(EBR),1,file)!=0 ){               
+            while(fread(&ebr,sizeof(EBR),1,file)!=0 ){
+
+                fseek(file,ebr.part_next,SEEK_SET);               
                 if(strcmp(id.data(),ebr.part_name) == 0){
                     fclose(file);
                     return ebr.part_fit;
@@ -331,9 +334,7 @@ char LOGIN_::getLogicPartFit(string path){
                 if(ebr.part_next==-1){
                     break;
                 }
-                else{
-                    fseek(file,ebr.part_next,SEEK_SET);
-                }
+
             }
                 
         }
