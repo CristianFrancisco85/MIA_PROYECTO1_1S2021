@@ -20,6 +20,7 @@ numero_negativo [-][0-9]+
 string (\"(\\.|[^\\"])*\")
 ruta "/"("/"|"-"|"_"|"."|[a-zA-Z0-9])+
 id ([a-zA-Z]|[0-9]|"_")*
+filen "file"[0-9]+
 
 %% // <<<<<<<<<<<<<<<<<<< [Reglas lexicas] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><
 ('\s'|'\r'|'\t')+ {};
@@ -85,7 +86,9 @@ id ([a-zA-Z]|[0-9]|"_")*
 "loss" {yylval.STRING = strdup(yytext);return (loss);};
 "recovery" {yylval.STRING = strdup(yytext);return (recovery);};
 "ruta" {yylval.STRING = strdup(yytext);return (ruta_);};
+"cat" {yylval.STRING = strdup(yytext);return (cat);};
 
+{filen} {yylval.STRING = strdup(yytext);return (filen);};
 {string} {yylval.STRING = strdup(yytext);return (cadena);};
 {ruta} {yylval.STRING = strdup(yytext);return(ruta);};
 {id} {yylval.STRING = strdup(yytext);return(id);};

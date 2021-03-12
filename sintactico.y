@@ -23,6 +23,7 @@
 #include <MKDIR.h>
 #include <LOSS.h>
 #include <RECOVERY.h>
+#include <CAT.h>
 #include <list>
 #include <structs.h>
 
@@ -53,6 +54,7 @@ MKFILE_* mkfile_ = new MKFILE_();
 MKDIR_* mkdir_= new MKDIR_();
 LOSS_* loss_= new LOSS_();
 RECOVERY_* recovery_= new RECOVERY_();
+CAT_* cat_= new CAT_();
 
 bool loged = false;
 Sesion sesion;
@@ -116,6 +118,8 @@ string lineaGuiones="-----------------------------------------------------------
 %token<STRING> loss
 %token<STRING> recovery
 %token<STRING> ruta_
+%token<STRING> filen
+%token<STRING> cat
 
 %token<STRING> rep
 %token<STRING> mbr
@@ -192,6 +196,10 @@ string lineaGuiones="-----------------------------------------------------------
 
 %type<STRING> RECOVERY
 
+%type<STRING> CAT
+%type<STRING> CATPARAMS
+%type<STRING> CATPARAM
+
 /*-------------------------------- Opciones --------------------------------------*/
 
 %error-verbose
@@ -230,6 +238,7 @@ INSTRUCCION:
     |MKDIR
     |LOSS
     |RECOVERY
+    |CAT
     |error{}
 ;
 
@@ -454,6 +463,20 @@ LOSS:
 
 RECOVERY:
     recovery guion id_ igual id {recovery_->setId($5);recovery_->init();cout << lineaGuiones <<endl;recovery_= new RECOVERY_();}
+;
+
+CAT:
+    cat CATPARAMS {cat_->init();cout<<lineaGuiones<<endl; cat_ = new CAT_();}
+;
+
+CATPARAMS:
+    CATPARAM CATPARAMS
+    | CATPARAM
+;
+
+CATPARAM:
+    guion filen igual ruta {cat_->addPath($4);}
+    | guion filen igual cadena {cat_->addPath($4);}
 ;
 
 %%
