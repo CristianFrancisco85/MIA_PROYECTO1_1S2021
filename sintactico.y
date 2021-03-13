@@ -437,8 +437,9 @@ MKFILEPARAM:
     | guion path igual ruta {mkfile_->setPath($4);}
     | guion path igual cadena {mkfile_->setPath($4);}
     | guion size igual numero {mkfile_->setSize($4);}
-    | guion cont igual ruta {mkfile_->setPath($4);}
-    | guion cont igual cadena {mkfile_->setPath($4);}
+    | guion size igual numero_negativo {mkfile_->setSize($4);}
+    | guion cont igual ruta {mkfile_->setCont($4);}
+    | guion cont igual cadena {mkfile_->setCont($4);}
 
 ;
 

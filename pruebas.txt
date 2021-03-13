@@ -32,11 +32,10 @@ mkgrp -name="usuarios3"
 rmgrp -name="usuarios2"
 mkusr -usr=user1 -pwd=usuario -grp=usuarios
 mkusr -usr=user2 -pwd=usrxd -grp=usuarios3
-rmusr -usr="user1"
 
 mkfile -size=50 -path=/home/usac/prueba.txt -r
 mkfile -size=50 -path=/home/usac/prueba2.txt 
-mkfile -size=50 -path=/home/usac/prueba3.txt 
+mkfile -size=50 -path=/home/usac/prueba3.txt -cont=/home/cristian/cont.txt
 mkdir -path=/home/etc/xd -p
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteMBR.jpg -name=mbr
@@ -47,9 +46,7 @@ mkdir -path=/home/etc/xd -p
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlockBM.txt -name=bm_block
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteSB.jpg -name=sb
 
-
-#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=inode
-#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteBlock.jpg -name=block
+rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
 
 pause
 loss -id=971a
@@ -58,9 +55,9 @@ pause
 recovery -id=971a
 
 #rep -id=971a -path=/home/cristian/PruebAsMIA/reporteJournaling.jpg -name=journaling
-#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteArbol.jpg -name=tree
-rep -id=971a -path=/home/cristian/PruebAsMIA/reporteUsers.jpg -ruta=/home/usac/prueba3.txt -name=file
 
+#rep -id=971a -path=/home/cristian/PruebAsMIA/reporteUsers.jpg -ruta=/home/usac/prueba3.txt -name=file
 
+cat -file1=/home/usac/prueba3.txt -file2=/users.txt
 
 

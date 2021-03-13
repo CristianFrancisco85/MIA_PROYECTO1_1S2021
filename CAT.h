@@ -26,6 +26,7 @@ public:
 
     CAT_(){
         this->statusFlag=true;
+        this->paths = new list<string>;
     }
 
     /**
@@ -156,6 +157,9 @@ int CAT_::buscarCarpetaArchivo(FILE *file, char* path){
                             break;
                         }
                     }
+                    if(!flag){
+                        return -1;
+                    }
                 }
                 //Apuntador indirecto
                 else if(j == 12){
@@ -189,6 +193,9 @@ int CAT_::buscarCarpetaArchivo(FILE *file, char* path){
                             if(flag){
                                 break;
                             }
+                            else{
+                                return -1;
+                            }
                         }
                     }
                 }
@@ -204,7 +211,11 @@ int CAT_::buscarCarpetaArchivo(FILE *file, char* path){
 }
 
 bool CAT_::mostrarContenidoArchivo(FILE *file, char* path){
-    int inodoNum = buscarCarpetaArchivo(file,path);
+
+    char auxPath[500];
+    strcpy(auxPath,path);
+    
+    int inodoNum = buscarCarpetaArchivo(file,auxPath);
     if(inodoNum != -1){
         
         SuperBloque super;

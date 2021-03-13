@@ -124,15 +124,16 @@ void LOGIN_::initLog(){
     setStatus();
     if(this->statusFlag){
         if(!loged){
-            int aux = makeLog();
-            if(aux=0){
+            int aux = 0;
+            aux = makeLog();
+            if(aux==0){
                 cout<< "\u001B[31m" << "[Error] Usuario Invalido"<< "\x1B[0m" << endl;
             }
-            else if(aux=1){
+            else if(aux==1){
                 loged=true;
-                cout<< "\u001B[32m" << "[OK] Sesion iniciada exitosamente "<< "\x1B[0m" << endl;
+                cout<< "\u001B[32m" << "[OK] Sesion iniciada exitosamente como "<<this->user<< "\x1B[0m" << endl;
             }
-            else if(aux=2){
+            else if(aux==2){
                 cout<< "\u001B[31m" << "[Error] Contraseña invalida "<< "\x1B[0m" << endl;
             }
             else{
@@ -257,6 +258,8 @@ int LOGIN_::makeLog(){
     //Se parsea el archivo
     char *endString;
     char *lineToken = strtok_r(auxArr,"\n",&endString);
+    
+
     while(lineToken != NULL){
         //Arreglos para guardar los datos
         char id[2];
@@ -266,21 +269,29 @@ int LOGIN_::makeLog(){
         char passwdArr[15];
 
         char *endToken;
-        char *auxToken = strtok_r(lineToken,",",&endToken);
+        char *auxToken = new char[100]; 
+            
+        auxToken = strtok_r(lineToken,",",&endToken);
         strcpy(id,auxToken);
         if(strcmp(id,"0") != 0){
             auxToken=strtok_r(NULL,",",&endToken);
-            strcpy(tipo,auxToken);
-            if(strcmp(tipo,"U") == 0){
+            for(int j=0;j<100;j++){
+                if(auxToken[j]=='U' || auxToken[j]=='G'){
+                    tipo[0]=auxToken[j];
+                    tipo[1]='\0';
+                    break;
+                }
+            }          
+            //strcpy(tipo,auxToken);
+            if(tipo[0] == 'U'||tipo[1]=='U'){
                 auxToken = strtok_r(NULL,",",&endToken);
                 group = auxToken;
                 auxToken = strtok_r(NULL,",",&endToken);
                 strcpy(userArr,auxToken);
                 auxToken = strtok_r(NULL,",",&endToken);
                 strcpy(passwdArr,auxToken);
-
-                if(strcmp(userArr,this->user.data()) == 0){
-                    if(strcmp(passwdArr,this->password.data()) == 0){
+                if(strcmp(userArr,this->user.data()) == 0){          
+                    if( strcmp(passwdArr,this->password.data()) == 0){                       
                         sesion.user = atoi(id);
                         sesion.direccion = diskPath;
                         sesion.group = buscarGrupo(group);
@@ -292,7 +303,8 @@ int LOGIN_::makeLog(){
                 }
             }
         }
-        lineToken = strtok_r(nullptr,"\n",&endString);
+        *auxToken='\0';
+        lineToken = strtok_r(NULL,"\n",&endString);
     }
 
     return 0;

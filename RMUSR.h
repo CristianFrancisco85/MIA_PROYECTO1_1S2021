@@ -84,6 +84,7 @@ void RMUSR_::init(){
         if(loged){
             if(sesion.user == 1 && sesion.group == 1){
                 if(buscarUsuario(user)){
+                    deleteUser();
                     cout<< "\u001B[32m" << "[OK] Usuario Eliminado Exitosamente"<< "\x1B[0m" << endl;
                     if(sesion.sistemaType == 3){
                         char content[64];
@@ -194,7 +195,8 @@ void RMUSR_::guardarJournal(char* operacion,char *path,char *content){
         //Se busca ultimo registro
         while(ftell(file) < super.s_bm_inode_start){
             fread(&registroAux,sizeof(Journal),1,file);
-            if(registroAux.content[0]=='\0'){
+            if(strcmp(registroAux.operationType,"mkgrp") != 0 && strcmp(registroAux.operationType,"mkusr") != 0  && strcmp(registroAux.operationType,"rmusr") != 0 
+            && strcmp(registroAux.operationType,"rmgrp") != 0 && strcmp(registroAux.operationType,"mkdir") != 0  && strcmp(registroAux.operationType,"mkfile") != 0 ){
                 break;
             }
         }
@@ -261,7 +263,7 @@ void RMUSR_::deleteUser(){
                     auxToken = strtok_r(NULL,",",&endToken);
                     strcpy(userArr,auxToken);
                     if(strcmp(userArr,user.data()) == 0){
-                        //Se encontro el grupo
+                        //Se encontro el usuario
                         auxLine[0]='0';
                     }
                 }

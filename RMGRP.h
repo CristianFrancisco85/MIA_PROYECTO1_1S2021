@@ -192,7 +192,8 @@ void RMGRP_::guardarJournal(char* operacion,char *path,char *content){
         //Se busca ultimo registro
         while(ftell(file) < super.s_bm_inode_start){
             fread(&registroAux,sizeof(Journal),1,file);
-            if(registroAux.content[0]=='\0'){
+            if(strcmp(registroAux.operationType,"mkgrp") != 0 && strcmp(registroAux.operationType,"mkusr") != 0  && strcmp(registroAux.operationType,"rmusr") != 0 
+            && strcmp(registroAux.operationType,"rmgrp") != 0 && strcmp(registroAux.operationType,"mkdir") != 0  && strcmp(registroAux.operationType,"mkfile") != 0 ){
                 break;
             }
         }

@@ -25,7 +25,7 @@ public:
     MKFS_(){
         this->id="";
         this->type="2fs";
-        this->typeFormat="fast";
+        this->typeFormat="full";
         this->statusFlag=false;
     };
 
@@ -87,9 +87,9 @@ void MKFS_::setStatus(){
         this->statusFlag=false;
         cout<< "\u001B[31m" << "[BAD PARAM] Tipo de Formato de Sistema Invalido"<< "\x1B[0m" << endl;
     }
-    if(this->typeFormat != "fast" && this->type != "full"){
+    if(this->typeFormat != "fast" && this->typeFormat != "full"){
         this->statusFlag=false;
-        cout<< "\u001B[31m" << "[BAD PARAM] Tipo de Formateo Invalido"<< "\x1B[0m" << endl;
+        cout<< "\u001B[31m" << "[BAD PARAM] Tipo de Formateo Invalidoo"<< "\x1B[0m" << endl;
     }
 }
 

@@ -179,7 +179,10 @@ void REP_::setPath(char *value){
 }
 
 void REP_::setRuta(char *value){
-    this->ruta=value;
+    ruta = value;
+    if(ruta[0] == '\"'){
+        ruta = ruta.substr(1, ruta.size()-2);
+    }  
 }
 
 void REP_::setId(char *value){
@@ -200,7 +203,6 @@ char* REP_::getId(){
 char* REP_::getName(){
     return  this->name;
 }
-
 
 void REP_::setStatus(){
 
@@ -1088,7 +1090,12 @@ void REP_::reportBloque(){
 
                 dotCode += "<tr>";
                 dotCode += "<td colspan='2'>";
-                dotCode += archivos.b_content;
+                char myCharArr[70];
+                for(int k=0;k<63;k++){
+                    myCharArr[k]='\0';
+                    myCharArr[k]=archivos.b_content[k];
+                }
+                dotCode += myCharArr;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
                 dotCode += "</table>>]\n";
@@ -2014,7 +2021,12 @@ void REP_::reportTree(){
 
                             dotCode += "<tr> ";
                             dotCode += "<td> ";
-                            dotCode += archivosBlock.b_content;
+                            char myCharArr[70];
+                            for(int k=0;k<63;k++){
+                                myCharArr[k]='\0';
+                                myCharArr[k]=archivosBlock.b_content[k];
+                            }
+                            dotCode += myCharArr;
                             dotCode += "</td>";
                             dotCode += "</tr>\n";
                             dotCode += "</table>>]\n";
@@ -2047,7 +2059,7 @@ void REP_::reportTree(){
                                         dotCode += "<table border='0' cellborder='1'>\n";
 
                                         dotCode += "<tr>";
-                                        dotCode += "<td colspan=\'2\' bgcolor=\"seagreen\"><b>Bloque de Carpetas "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td>";
+                                        dotCode += "<td colspan=\'2\' bgcolor=\"limegreen\"><b>Bloque de Carpetas "+to_string(apuntadoresBlock.b_pointers[m])+"</b></td>";
                                         dotCode += "</tr>\n";
 
                                         dotCode += "<tr>";
@@ -2084,7 +2096,12 @@ void REP_::reportTree(){
 
                                         dotCode += "<tr>";
                                         dotCode +="<td> ";
-                                        dotCode += archivosBlock.b_content;
+                                        char myCharArr[70];
+                                        for(int k=0;k<63;k++){
+                                            myCharArr[k]='\0';
+                                            myCharArr[k]=archivosBlock.b_content[k];
+                                        }
+                                        dotCode += myCharArr;
                                         dotCode += " </td>";
                                         dotCode +="</tr>\n";
 
@@ -2385,7 +2402,7 @@ void REP_::reportFile(){
                             if(apuntador.b_pointers[j] != -1){
                                 fseek(file,super.s_block_start + sizeof(BloqueCarpetas)*apuntador.b_pointers[j],SEEK_SET);
                                 fread(&archivo,sizeof(BloqueArchivos),1,file);
-                                for(int j=0;j<64;j++){
+                                for(int j=0;j<63;j++){
                                     dotCode += archivo.b_content[j];
                                 }
                                 dotCode +="<br/>";
@@ -2520,6 +2537,9 @@ int REP_::buscarCarpetaArchivo(FILE *file, char* path,int superStart){
                             break;
                         }
                     }
+                    if(!flag){
+                        return -1;
+                    }
                 }
                 //Apuntador indirecto
                 else if(j == 12){
@@ -2552,6 +2572,9 @@ int REP_::buscarCarpetaArchivo(FILE *file, char* path,int superStart){
                             }
                             if(flag){
                                 break;
+                            }
+                            else{
+                                return -1;
                             }
                         }
                     }
