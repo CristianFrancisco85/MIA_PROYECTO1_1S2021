@@ -208,14 +208,14 @@ int MKDIR_::buscarCarpetaArchivo(FILE *file, char* path){
         token = strtok(NULL,"/");
         cont++;
     }
-
+    int copiaByteInodo;
     SuperBloque super;
     fseek(file,sesion.superStart,SEEK_SET);
     fread(&super,sizeof(SuperBloque),1,file);
     byteInodo = super.s_inode_start;
 
     for (int i = 0; i < cont; i++) {
-
+        copiaByteInodo=byteInodo;
         fseek(file,byteInodo,SEEK_SET);
         InodeTable inodo;
         fread(&inodo,sizeof(InodeTable),1,file);
@@ -288,6 +288,9 @@ int MKDIR_::buscarCarpetaArchivo(FILE *file, char* path){
                     break;
                 }
             }
+        }
+        if(copiaByteInodo==byteInodo){
+            return -1;
         }
     }
 
