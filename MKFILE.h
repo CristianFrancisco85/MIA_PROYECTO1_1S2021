@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
+#include <MKDIR.h>
 #include <MOUNT.h>
 #include <list>
 #include <iterator>
@@ -17,6 +18,7 @@ using namespace std;
 extern list<MOUNT_> *mounted;
 extern bool loged;
 extern Sesion sesion;
+extern MKDIR_* mkdir_;
 enum returnType {fileExist,fileCreated,badPermissions,badContent,badPath,folderCreated};
 
 class MKFILE_{
@@ -194,7 +196,8 @@ void MKFILE_::init (){
 
                 char auxPath[500];
                 strcpy(auxPath,this->path.c_str());
-                if(buscarCarpetaArchivo(file,auxPath) != -1){
+                int auxInt=buscarCarpetaArchivo(file,auxPath);
+                if(auxInt != -1){
                     // PREGUNTAR SI DESEA SOBREESCRIBIR EL ARCHIVO
                     cout<< "\u001B[33m" << "[WARNING] El archivo ya existe. ¿Desea sobreescribirlo ? Y/N "<< "\x1B[0m" << endl;
                 }
@@ -1253,42 +1256,38 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
 
         if(auxindex == -1){
             
-            if(rParam){         
-                string auxStr1,auxStr2;
-                auxindex=0;
-                for (int i = 0; i < auxCont; i++) {
-                    auxStr1 = "";
-                    if(i == auxCont-1){
-                        char newPath[200];
-                        for(int j=0; j<200;j++){
-                            newPath[j]='\0';
-                        }
-                        strcat(newPath,"/");
-                        strcat(newPath,nombreAC);
+            if(rParam){
+                
+                string auxString="/";
+                list<string>::iterator it=lista.begin();
+                for(int i=0; i<lista.size();i++){
+                    if(i<lista.size()-1){
+                        auxString+=*it+"/";
+                    }
+                    it++;                                                         
+                }
+                auxString.pop_back();
 
-                        return nuevoArchivo(auxindex,newPath);
-                    }
-                    else{
-                        list<string>::iterator it = lista.begin();
-                        for(int j=0; j<i; j++){
-                            it++;
-                        }
-                        auxStr1 += "/"+*it;
-                        auxStr2 += "/"+*it;
-                        char dir[500];
-                        strcpy(dir,auxStr2.c_str());
-                        int carpeta = buscarCarpetaArchivo(file,dir);
-                        if(carpeta == -1){
-                            strcpy(dir,auxStr1.c_str());
-                            nuevaCarpeta(file,dir,auxindex);
-                            strcpy(dir,auxStr2.c_str());
-                            auxindex = buscarCarpetaArchivo(file,dir);
-                        }
-                        else{
-                            auxindex = carpeta;
-                        }   
-                    }
-                }   
+                char dir[500];
+                char dir2[500];
+                strcpy(dir,auxString.c_str());
+                strcpy(dir2,auxString.c_str());
+
+                mkdir_->setPath(dir);
+                mkdir_->setPParam();
+                mkdir_->nuevaCarpeta(dir,0);
+                auxindex = mkdir_->buscarCarpetaArchivo(file,dir2);
+                mkdir_= new MKDIR_();
+
+                char newPath[150];
+                for(int j=0;j<150;j++){
+                    newPath[j]='\0';
+                }
+                strcat(newPath,"/");
+                strcat(newPath,nombreAC);
+                return nuevoArchivo(auxindex,newPath);
+
+
             }
             else{
                 return badPath;
@@ -1301,7 +1300,6 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
             }
             strcat(newPath,"/");
             strcat(newPath,nombreAC);
-
             return nuevoArchivo(auxindex,newPath);
         }
     }
