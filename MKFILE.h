@@ -593,6 +593,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                 super.s_free_inodes_count = super.s_free_inodes_count - 1;
                 fseek(file,sesion.superStart,SEEK_SET);
                 fwrite(&super,sizeof(SuperBloque),1,file);
+                fclose(file);
                 return fileCreated;
             }
             else{
@@ -649,6 +650,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     fwrite(&myChar,sizeof(char),1,file);
                     //Se guarda el bloque en el inodo
                     inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable) * index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
 
@@ -827,6 +829,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return fileCreated;
 
                 }
@@ -836,6 +839,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     //Se guarda bloque en el inodo
                     int bitBloque = buscarBit(file,sesion.fit,'B');
                     inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
                     //Se marca en el bitmap de bloques
@@ -1033,6 +1037,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return fileCreated;
 
 
@@ -1231,6 +1236,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                     super.s_free_inodes_count = super.s_free_inodes_count - 1;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return fileCreated;
                     
                 }
@@ -1245,8 +1251,9 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
     else{
         int auxindex = buscarCarpetaArchivo(file,dirName);
 
-        if(auxindex == -1){       
-            if(rParam){
+        if(auxindex == -1){
+            
+            if(rParam){         
                 string auxStr1,auxStr2;
                 auxindex=0;
                 for (int i = 0; i < auxCont; i++) {
@@ -1269,7 +1276,7 @@ returnType MKFILE_::nuevoArchivo(int index, char *tempPath){
                         auxStr1 += "/"+*it;
                         auxStr2 += "/"+*it;
                         char dir[500];
-                        strcpy(dir,auxStr1.c_str());
+                        strcpy(dir,auxStr2.c_str());
                         int carpeta = buscarCarpetaArchivo(file,dir);
                         if(carpeta == -1){
                             strcpy(dir,auxStr1.c_str());
@@ -1357,7 +1364,6 @@ bool MKFILE_::permisoDeEscritura(int permisos, bool flagUser, bool flagGroup){
     char propietario = aux[0];
     char grupo = aux[1];
     char otros = aux[2];
-
     if(flagUser && (propietario == '2' || propietario == '3' || propietario == '6' || propietario || '7') ){
         return true;
     }
@@ -1767,6 +1773,7 @@ returnType MKFILE_::nuevaCarpeta(FILE *file, char *tempPath, int index){
                     int bitBloque = buscarBit(file,sesion.fit,'B');
                     //Se agrega bloque a inodo y se reescribe
                     inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
 
@@ -1840,6 +1847,7 @@ returnType MKFILE_::nuevaCarpeta(FILE *file, char *tempPath, int index){
                     //Se guarda bloque en el inodo
                     int bitBloque = buscarBit(file,sesion.fit,'B');//Apuntador
                     inodo.i_block[apuntadorLibre] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
                     //Se marca en el bitmap de bloques

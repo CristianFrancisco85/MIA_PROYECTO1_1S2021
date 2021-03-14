@@ -741,16 +741,20 @@ void REP_::reportInode(){
     if(partIndex != -1){
 
         //Se lee el MBR y Super Bloque
-        MBR master;
-        SuperBloque super;
+        
+        
         FILE *file = fopen(disk->getPath().c_str(),"r+b");
+
+        MBR master;
         fread(&master,sizeof(MBR),1,file);
+
         Partition *mbr_partitions[4];
         mbr_partitions[0]=&master.mbr_partition_1;
         mbr_partitions[1]=&master.mbr_partition_2;
         mbr_partitions[2]=&master.mbr_partition_3;
         mbr_partitions[3]=&master.mbr_partition_4;
 
+        SuperBloque super;
         fseek(file,mbr_partitions[partIndex]->part_start,SEEK_SET);
         fread(&super,sizeof(SuperBloque),1,file);
 
@@ -795,7 +799,8 @@ void REP_::reportInode(){
                 timeStruct=localtime(&auxInodo.i_atime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
                 dotCode += "<tr>";
-                dotCode += "<td> i_atime </td><td>";
+                dotCode += "<td> i_atime </td>";
+                dotCode += "<td>";
                 dotCode += date;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
@@ -803,7 +808,8 @@ void REP_::reportInode(){
                 timeStruct=localtime(&auxInodo.i_ctime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
                 dotCode += " <tr>";
-                dotCode += "<td> i_ctime </td><td>";
+                dotCode += "<td> i_ctime </td>";
+                dotCode += "<td>";
                 dotCode += date;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
@@ -811,19 +817,22 @@ void REP_::reportInode(){
                 timeStruct=localtime(&auxInodo.i_mtime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
                 dotCode += "<tr>";
-                dotCode += "<td> i_mtime </td><td>";
+                dotCode += "<td> i_mtime </td>";
+                dotCode += "<td>";
+                dotCode += date;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
 
                 for(int j = 0; j < 15; j++){
                     dotCode += "<tr>";
-                dotCode += "<td> i_block_"+to_string(j)+"</td>";
-                dotCode += "<td>"+to_string(auxInodo.i_block[j])+" </td>";
-                dotCode += "</tr>\n";
+                    dotCode += "<td> i_block_"+to_string(j)+"</td>";
+                    dotCode += "<td>"+to_string(auxInodo.i_block[j])+" </td>";
+                    dotCode += "</tr>\n";
                 }
 
                 dotCode += "<tr>";
-                dotCode += "<td> i_type </td><td> ";
+                dotCode += "<td> i_type </td>";
+                dotCode += "<td> ";
                 dotCode += auxInodo.i_type;
                 dotCode += "</td>";
                 dotCode += "</tr>\n";
@@ -894,62 +903,103 @@ void REP_::reportInode(){
 
         partIndex = disk->findLogicPartitionStart();
         if(partIndex != -1){
-            EBR extendedBoot;
-            SuperBloque super;
+            
+            
             FILE *file = fopen(disk->getPath().c_str(),"r+b");
+
+            EBR extendedBoot;
             fseek(file,partIndex,SEEK_SET);
             fread(&extendedBoot,sizeof(EBR),1,file);
+
+            SuperBloque super;
             fread(&super,sizeof(SuperBloque),1,file);
-             InodeTable auxInodo;
+
+            InodeTable auxInodo;
             int bitMapStart = super.s_bm_inode_start;
 
-            string dotCode = "digraph G{\n\n";
+            string dotCode = "digraph G{\n";
 
             for(int i=0;bitMapStart < super.s_bm_block_start;i++){
 
                 fseek(file,super.s_bm_inode_start + i,SEEK_SET);
-                char myBit;
-                myBit = fgetc(file);
+
                 //Si el inodo se esta utilizando
-                if(myBit == '1'){
+                if(fgetc(file) == '1'){
+
                 fseek(file,super.s_inode_start + sizeof(InodeTable)*i,SEEK_SET);
                 fread(&auxInodo,sizeof(InodeTable),1,file);
 
                 dotCode += " nodo_"+to_string(i)+"[ shape=none,label=<\n";
                 dotCode += "<table border='0' cellborder='1' cellspacing='0'>";
-                dotCode += "<tr> <td colspan='2'> <b>Inodo "+to_string(i)+"</b> </td></tr>\n";
-                dotCode += "<tr> <td> i_uid </td> <td> "+to_string(auxInodo.i_gid)+"</td>  </tr>\n";
-                dotCode += "<tr> <td> i_gid </td> <td> "+to_string(auxInodo.i_gid)+"</td>  </tr>\n";
-                dotCode += "<tr> <td> i_size </td> <td> "+to_string(auxInodo.i_size)+"</td> </tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td colspan='2'> <b>Inodo "+to_string(i)+"</b> </td>";
+                dotCode += "</tr>";
+
+                dotCode += "<tr>";
+                dotCode += "<td> i_uid </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td> i_gid </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_gid)+"</td>";
+                dotCode += "</tr>\n";
+
+                dotCode += "<tr>";
+                dotCode += "<td> i_size </td>";
+                dotCode += "<td> "+to_string(auxInodo.i_size)+"</td>";
+                dotCode += "</tr>\n";
 
                 struct tm *timeStruct;
                 char date[50];
 
                 timeStruct=localtime(&auxInodo.i_atime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_atime </td><td>";
+                dotCode += "<tr>";
+                dotCode += "<td> i_atime </td>";
+                dotCode += "<td>";
                 dotCode += date;
-                dotCode += "</td> </tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&auxInodo.i_ctime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += " <tr><td> i_ctime </td><td>";
+                dotCode += " <tr>";
+                dotCode += "<td> i_ctime </td>";
+                dotCode += "<td>";
                 dotCode += date;
-                dotCode += "</td></tr>\n";
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 timeStruct=localtime(&auxInodo.i_mtime);
                 strftime(date,100,"%d/%m/%y %H:%M",timeStruct);
-                dotCode += "<tr><td> i_mtime </td><td>";
-                dotCode += "</td></tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td> i_mtime </td>";
+                dotCode += "<td>";
+                dotCode += date;
+                dotCode += "</td>";
+                dotCode += "</tr>\n";
 
                 for(int j = 0; j < 15; j++){
-                    dotCode += "<tr><td> i_block_"+to_string(j)+"</td><td>"+to_string(auxInodo.i_block[j])+" </td> </tr>\n";
+                    dotCode += "<tr>";
+                    dotCode += "<td> i_block_"+to_string(j)+"</td>";
+                    dotCode += "<td>"+to_string(auxInodo.i_block[j])+" </td> ";
+                    dotCode += "</tr>\n";
                 }
 
-                dotCode += "<tr><td> i_type </td><td> ";
+                dotCode += "<tr>";
+                dotCode += "<td> i_type </td>";
+                dotCode += "<td> ";
                 dotCode += auxInodo.i_type;
-                dotCode += "</td></tr>\n";
-                dotCode += "<tr><td> i_perm </td><td>"+to_string(auxInodo.i_perm)+"</td></tr>\n";
+                dotCode += "</td>";
+
+                dotCode += "</tr>\n";
+                dotCode += "<tr>";
+                dotCode += "<td> i_perm </td>";
+                dotCode += "<td>"+to_string(auxInodo.i_perm)+"</td>";
+                dotCode += "</tr>\n";
+                
                 dotCode += "</table>>]\n";
             }
             bitMapStart++;

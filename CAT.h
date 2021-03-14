@@ -72,7 +72,11 @@ public:
 };
 
 void CAT_::addPath(char *value){
-    this->paths->push_back(value);
+    string auxRuta = value;
+    if(auxRuta[0] == '\"'){
+        auxRuta = auxRuta.substr(1, auxRuta.size()-2);
+    }  
+    this->paths->push_back(auxRuta);
 }
 
 void CAT_::setStatus(){

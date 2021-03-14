@@ -196,6 +196,7 @@ int LOGIN_::makeLog(){
         sesion.fit = mbr_partitions[partIndex]->part_fit;
 
         diskPath = disk->getPath();
+
         
     }
     else{
@@ -223,7 +224,7 @@ int LOGIN_::makeLog(){
             sesion.sistemaType = super.s_filesystem_type;
             sesion.fit = getLogicPartFit(disk->getPath());
 
-            diskPath = disk->getPath();            
+            diskPath = disk->getPath();       
         }
         else{
             return 0;
@@ -295,6 +296,16 @@ int LOGIN_::makeLog(){
                         sesion.user = atoi(id);
                         sesion.direccion = diskPath;
                         sesion.group = buscarGrupo(group);
+
+                        FILE *file = fopen(diskPath.data(),"r+b");
+                        fseek(file,sesion.superStart,SEEK_SET);
+                        fread(&super,sizeof(SuperBloque),1,file);
+                        super.s_mtime=time(nullptr);
+                        super.s_mnt_count++;
+                        fseek(file,sesion.superStart,SEEK_SET);
+                        fwrite(&super,sizeof(SuperBloque),1,file);
+                        fclose(file);
+
                         return 1;
                     }
                     else{
@@ -407,6 +418,15 @@ int LOGIN_::buscarGrupo(string name){
 
 void LOGIN_::logout(){
     if(loged){
+        SuperBloque super;
+        FILE *file = fopen(sesion.direccion.c_str(),"r+b");
+        fseek(file,sesion.superStart,SEEK_SET);
+        fread(&super,sizeof(SuperBloque),1,file);
+        super.s_umtime=time(nullptr);
+        fseek(file,sesion.superStart,SEEK_SET);
+        fwrite(&super,sizeof(SuperBloque),1,file);
+        fclose(file);
+
         loged = false;
         sesion.direccion = "";
         sesion.user = -1;

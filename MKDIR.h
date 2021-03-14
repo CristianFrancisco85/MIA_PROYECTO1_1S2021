@@ -580,12 +580,13 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     fwrite(&myChar,sizeof(char),1,file);
 
                     //Se reescribe el super bloque
-                    super.s_free_inodes_count = super.s_free_inodes_count - 1;
-                    super.s_first_ino = super.s_first_ino + 1;
-                    super.s_first_blo = super.s_first_blo + 1;
-                    super.s_free_blocks_count = super.s_free_blocks_count - 1;
+                    super.s_free_inodes_count--;
+                    super.s_first_ino++;
+                    super.s_first_blo++;
+                    super.s_free_blocks_count--;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
                 }
                 //Apuntador indirecto simple
@@ -649,6 +650,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     super.s_free_blocks_count = super.s_free_blocks_count - 1;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
 
                 }
@@ -710,6 +712,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     super.s_free_blocks_count = super.s_free_blocks_count - 2;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
                 }
             }
@@ -762,6 +765,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     int bitBloque = buscarBit(file,sesion.fit,'B');
                     //Se agrega bloque a inodo y se reescribe
                     inodo.i_block[pointerCarpetas] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
 
@@ -825,6 +829,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
 
 
@@ -835,6 +840,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     //Se guarda bloque en el inodo
                     int bitBloque = buscarBit(file,sesion.fit,'B');//Apuntador
                     inodo.i_block[pointerCarpetas] = bitBloque;
+                    inodo.i_mtime=time(nullptr);
                     fseek(file,super.s_inode_start + sizeof(InodeTable)*index,SEEK_SET);
                     fwrite(&inodo,sizeof(InodeTable),1,file);
                     //Se marca en el bitmap de bloques
@@ -910,6 +916,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     super.s_first_blo = super.s_first_blo + 3;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
 
                 }
@@ -981,6 +988,7 @@ returnTypeDir MKDIR_::nuevaCarpeta(char *tempPath, int index){
                     super.s_free_blocks_count = super.s_free_blocks_count - 2;
                     fseek(file,sesion.superStart,SEEK_SET);
                     fwrite(&super,sizeof(SuperBloque),1,file);
+                    fclose(file);
                     return folderCreatedDir;
                 }
 
